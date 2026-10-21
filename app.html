@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-<title>校友圈 · 毕业生校友社区</title>
+<title>ICC国际高中校友圈 · 毕业生校友社区</title>
 <style>
 :root{
   --green:#07C160; --green-d:#06a552;
@@ -141,15 +141,16 @@ a.lnk{color:var(--theme);text-decoration:none}
 <body>
 <div id="phone">
   <div id="statusbar"><span id="sb-time">9:41</span><span>📶 100% 🔋</span></div>
-  <div id="navbar"><span class="back" onclick="goBack()">‹</span><span id="nav-title">校友圈</span><span class="act" id="nav-act"></span></div>
+  <div id="navbar"><span class="back" onclick="goBack()">‹</span><span id="nav-title">ICC国际高中校友圈</span><span class="act" id="nav-act"></span></div>
   <div id="page"></div>
   <div id="tabbar"></div>
   <div id="modal"><div class="sheet" id="sheet"></div></div>
   <div id="toast"></div>
 </div>
+
 <script>
 /* ============ 数据层 ============ */
-const SCHOOL = "示例国际高中 · 校友会";
+const SCHOOL = "ICC国际高中 · 校友会";
 const ROLES = {
   alum  :{name:"校友入口",theme:"var(--alum)"  ,ico:"🎓",color:"#07C160",desc:"本人自主使用 · 名录、心动、连接、隐私中心"},
   parent:{name:"家长入口",theme:"var(--parent)",ico:"👨‍👩‍👧",color:"#F08A3C",desc:"为子女了解校友动向 · 家长牵线（需子女确认）"},
@@ -271,6 +272,7 @@ const LOGS = [
 
 let S = {role:null,tab:"home",page:"login",stack:[],profile:null,chat:null,filters:{grad:"",city:"",ind:"",edu:"",kw:"",stage:""},
   liked:{},likesLeft:5,parentBind:"pending",toastT:null,consent:{privacy:false,rules:false},subRole:2,joined:{}};
+
 /* ============ 框架：工具 / 路由 / 登录 / 校友端 ============ */
 const P=id=>document.getElementById(id);
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -307,6 +309,7 @@ function pick(k,v){
    <button class="btn ghost" style="margin-top:14px" onclick="closeSheet()">完成</button>`,"筛选 · "+lb);
 }
 function openChat(id){S.arg=id;S.page="chat";render();}
+
 /* ============ 家长端 / 老师端 / 管理员端 ============ */
 function pgParentMe(){
   P("nav-title").textContent="我的";
@@ -424,6 +427,7 @@ function pgAdminLog(){
 
 function tick(){const d=new Date();P("sb-time").textContent=d.getHours()+":"+String(d.getMinutes()).padStart(2,"0");}
 tick();setInterval(tick,30000);render();
+
 /* ============ v2：第三方批判后的补齐 ============ */
 document.head.insertAdjacentHTML("beforeend",`<style>
 body.big #phone{font-size:17px}
@@ -447,14 +451,14 @@ function pgLogin(){
   P("tabbar").classList.add("hidden");P("nav-title").textContent="";P("nav-act").textContent="";
   P("page").innerHTML=`
   <div class="hero" style="padding-top:56px"><div style="font-size:13px;opacity:.9">${SCHOOL}</div>
-    <h1 style="margin-top:8px">校友圈</h1><p>10 届毕业生 · 邀请制 · 非公开注册</p></div>
+    <h1 style="margin-top:8px">ICC国际高中校友圈</h1><p>10 届毕业生 · 邀请制 · 非公开注册</p></div>
   <div style="background:#fff;border-radius:16px;margin:18px 12px;padding:18px">
     <div class="notice b">仅本校<b>已毕业</b>校友可注册；在校生不在名录范围内，也不会向家长展示。</div>
-    <div class="card"><div class="b small" style="margin-bottom:6px">校友圈是什么？</div>
+    <div class="card"><div class="b small" style="margin-bottom:6px">ICC国际高中校友圈是什么？</div>
       <div class="small muted" style="line-height:1.8">本校毕业生的<b>邀请制校友社区</b>：校友名录、同城校友、校友活动都在这里。要不要认识某位校友、什么时候交换联系方式，完全由你自己决定；校友会只负责身份核验与社区守则维护。</div></div>
     <div style="margin:14px 0">
       ${[["《用户隐私保护指引》","privacy","收集范围、照片授权、你的权利"],
-         ["《校友圈社区公约》","rules","真实、克制、不骚扰、反诈"]]
+         ["《ICC国际高中校友圈社区公约》","rules","真实、克制、不骚扰、反诈"]]
         .map(([n,k,d])=>`<label class="row small" style="align-items:flex-start;gap:8px;margin-bottom:12px;cursor:pointer" onclick="S.consent['${k}']=!S.consent['${k}'];render()">
           <span style="margin-top:1px">
             ${S.consent[k]?'<span style="color:var(--theme);font-size:17px">☑</span>':'<span style="color:#bbb;font-size:17px">☐</span>'}</span>
@@ -469,7 +473,7 @@ function pgLogin(){
   <div class="footer-note">校友会内部交流 · 仅限受邀校友</div>`;
 }
 function showPolicy(k){
-  const t={privacy:"用户隐私保护指引",rules:"校友圈社区公约",parent:"家长守则"}[k||"privacy"];
+  const t={privacy:"用户隐私保护指引",rules:"ICC国际高中校友圈社区公约",parent:"家长守则"}[k||"privacy"];
   const body={
    privacy:`<b>一、收集范围（最小必要）</b><br>身份：微信 openid、姓名首字、届别班级；学历：院校/专业/学位年份；工作：城市/行业/职位。<b>不收集</b>身份证号、住址、收入资产、通讯录、实时定位。<br><br><b>二、照片</b><br>默认「申请查看」：他人申请 → 你逐条同意 → 你随时撤回，撤回后对方立即不可见。<br><br><b>三、家长可见</b><br>默认关闭；开启后家长仅见届别、院校、城市、行业，不含单位名称、照片与对话内容。<br><br><b>四、你的权利</b><br>查阅、复制、更正、删除、撤回同意、注销（15 个工作日内完成）。<br><br><b>五、安全</b><br>分级权限、访问留痕、页面水印、导出审批，消息与图片实时检测。`,
    rules:`1. 信息真实：冒用他人身份或伪造学历 → 永久封禁并通报校友会。<br>2. 克制表达：不使用外貌、家境、收入评价他人。<br>3. 不骚扰：重复发送、纠缠、深夜打扰均属违规。<br>4. 反诈：涉及金钱往来先核实；平台永不代收费用。<br>5. 不外传：截屏、转发校友信息属严重违规。<br>6. 举报：恶意举报累计 3 次将限制举报功能。`,
@@ -617,6 +621,7 @@ function pgAdminHome(){
   <div class="notice">建议上线节奏：邀请制内测（50 位校友 + 10 位家长）→ 校友会复核 → 按届别分批开放。</div>`;
 }
 
+
 /* ============ v3：第二轮批判后的补齐 ============ */
 function whyRec(){sheet(`
  <div class="small" style="line-height:1.8">
@@ -645,7 +650,7 @@ function pgParentHome(){
   P("nav-title").textContent="家长首页";P("nav-act").textContent="";
   P("page").innerHTML=`
   ${S.parentBind==="pending"?`
-  <div class="notice">家长端需要子女本人在 TA 的校友圈里确认邀请，才能查看校友名录。</div>
+  <div class="notice">家长端需要子女本人在 TA 的 ICC国际高中校友圈里确认邀请，才能查看校友名录。</div>
   <div class="card center" style="padding:26px 16px">
     <div style="font-size:40px">🔑</div>
     <div class="b" style="margin-top:10px">向 ${esc(CHILD.name)}（${CHILD.grad}届）发起绑定邀请</div>
@@ -778,11 +783,13 @@ function pgChatDetail(){
      <button class="btn mini ghost" style="flex:1" onclick="reportSheet(${c.id})">举报</button></div>
    <div class="small muted" style="margin-top:8px">检测：敏感词 · 外部联系方式 · 涉诈关键词（转账/投资/返利）</div></div>`;
 }
+
 /* ============ v4：本文件已清空 ============
    原本在这里的 pgRole / pgRoster 等函数早已被 11_v7.js 覆盖，属于死代码，
    已在「删除重复函数」一轮中移除。
    保留这个空文件，是为了不打乱既定的拼接命令（01 + 02~11 + 05）与各处文档里的说明。
    ======================================== */
+
 /* ================= v3.0：按评估意见重构 ================= */
 /* 数据增强：教育经历、连接关系、家长对家长 */
 ALUMNI.forEach((a,i)=>{
@@ -986,6 +993,7 @@ function parentLike(id){const a=ALUMNI.find(x=>x.id===id);
    <textarea class="input" style="height:70px;padding:10px;margin-top:10px" placeholder="给对方家长的一段话（不含收入、房产、住址）"></textarea>
    <button class="btn" style="margin-top:12px" onclick="closeSheet();toast('已推送给对方家长 · 48h 未回应自动失效')">推送给对方家长</button>
    <button class="btn ghost" style="margin-top:8px" onclick="closeSheet()">取消</button>`,"觉得合适");}
+
 /* ================= 学校背书预填、解绑、排序屏蔽、合规 ================= */
 
 /* ---------- 校友端「我的」：加解绑家长、资料完整度 ---------- */
@@ -1043,7 +1051,7 @@ function pgAlumMe(){
   </div>
   <div class="card">
    <div class="between" style="padding:11px 0;border-bottom:1px solid var(--line);cursor:pointer" onclick="S.page='tech';render()">
-     <div><div class="small b">关于校友圈</div><div class="muted" style="font-size:11px">推荐规则与版本</div></div><span class="muted">›</span></div>
+     <div><div class="small b">关于 ICC国际高中校友圈</div><div class="muted" style="font-size:11px">推荐规则与版本</div></div><span class="muted">›</span></div>
    <div class="between" style="padding:11px 0;cursor:pointer" onclick="S.from='me';S.tab='me';S.arg=null;S.page='role';render()">
      <div class="small b">切换身份（家长 / 老师 / 管理员）</div><span class="muted">›</span></div></div>
   <div class="footer-note">校友会内部交流 · 仅限受邀校友</div>`;
@@ -1135,6 +1143,7 @@ function pgTech(){
    <div class="small" style="line-height:1.9">双方各自确认后，才能在名片页看到联系方式；名片页带浏览者水印，30 天后自动隐藏。</div></div>
   <button class="btn gray" style="margin:6px 12px" onclick="S.page='main';render()">返回</button>`;
 }
+
 
 /* ============ v4.0：吸收"独立方案"后的改进 ============ */
 document.head.insertAdjacentHTML("beforeend",`<style>
@@ -1331,7 +1340,7 @@ function whyOf(a){
 }
 
 function pgAlumHome(){
-  P("nav-title").textContent="校友圈";P("nav-act").textContent=`今日可心动 ${S.likesLeft}`;
+  P("nav-title").textContent="ICC国际高中校友圈";P("nav-act").textContent=`今日可心动 ${S.likesLeft}`;
   P("nav-act").onclick=()=>toast(`每天 3 次 · 每周 10 次，次日 0 点重置（本周还剩 ${S.likesWeek} 次）`);
   // 与小程序的 feed 云函数同一套口径，改一边就要改另一边：
   // 候选限定「届别相差 3 届以内」→ 打分（同城 3 > 共同兴趣 2 > 同届 1.5 > 届别相近 1）
@@ -1436,7 +1445,7 @@ function iceSheet(id){const a=ALUMNI.find(x=>x.id===id);
 /* ---- 6. 教职工端：新增「数据概览」 ---- */
 function renderTabs(){
   const map={
-    alum:[["home","校友圈","✨"],["roster","名录","📖"],["chat","连接","🔗"],["me","我的","🙋"]],
+    alum:[["home","ICC国际高中校友圈","✨"],["roster","名录","📖"],["chat","连接","🔗"],["me","我的","🙋"]],
     parent:[["home","家长首页","🏠"],["roster","名录","📖"],["match","牵线","💌"],["me","我的","🙋"]],
     staff:[["review","审核","✅"],["alumni","名录","📖"],["risk","风控","🛡️"],["dash","概览","📈"],["me","我的","🙋"]],
     admin:[["home","总览","📊"],["perm","权限","🔑"],["data","数据权利","🗂️"],["me","审计","🧾"]]
@@ -1487,7 +1496,7 @@ function pgRole(){
       <div class="r-ico" style="background:${ROLES[k].color}">${ROLES[k].ico}</div>
       <div style="flex:1"><div class="r-n">${ROLES[k].name}</div><div class="r-d">${ROLES[k].desc}</div></div>
       <div style="color:#ccc">›</div></div>`).join("")}
-  <div class="card"><div class="b small" style="margin-bottom:8px">关于校友圈</div>
+  <div class="card"><div class="b small" style="margin-bottom:8px">关于 ICC国际高中校友圈</div>
   <div class="small muted" style="line-height:1.8">
   面向本校毕业生的邀请制私密社区：没有公开注册入口，凭邀请码加入；在这里可以找校友、看活动、更新自己的近况。</div></div>
   <div class="footer-note">校友会内部交流 · 仅限受邀校友</div>`;
@@ -1527,6 +1536,7 @@ function goBack(){
   if(S.arg!=null){S.arg=null;render();return;}
   S.from="app";S.role=null;S.page="role";render();
 }
+
 </script>
 </body>
 </html>
