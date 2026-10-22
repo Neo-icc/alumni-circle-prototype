@@ -152,7 +152,7 @@ a.lnk{color:var(--theme);text-decoration:none}
 /* ============ 数据层 ============ */
 const SCHOOL = "ICC国际高中 · 校友会";
 const ROLES = {
-  alum  :{name:"校友入口",theme:"var(--alum)"  ,ico:"🎓",color:"#07C160",desc:"本人自主使用 · 名录、心动、连接、隐私中心"},
+  alum  :{name:"校友入口",theme:"var(--alum)"  ,ico:"🎓",color:"#07C160",desc:"本人自主使用 · 名录、特别留意、连接、隐私中心"},
   parent:{name:"家长入口",theme:"var(--parent)",ico:"👨‍👩‍👧",color:"#F08A3C",desc:"为子女了解校友动向 · 家长牵线（需子女确认）"},
   staff :{name:"教职工 / 校友会",theme:"var(--staff)",ico:"🏫",color:"#3A6FF7",desc:"身份与学历审核 · 风控 · 活动 · 数据概览"},
   admin :{name:"平台管理员",theme:"var(--admin)",ico:"🛡️",color:"#6B5BD2",desc:"权限、协议、数据权利、审计日志"}
@@ -227,12 +227,12 @@ const CHILD = {id:2,name:"陈嘉远",grad:2016,relation:"儿子",city:"上海",i
 
 const CHATS = [
  {id:2,name:"陈嘉远",last:"周末校友会有活动，一起？",time:"09:12",unread:1,state:"mutual",
-  msgs:[{t:"sys",x:"双向心动后开放对话。请勿透露银行卡、验证码；涉及金钱往来请先核实对方身份。"},
+  msgs:[{t:"sys",x:"双方都特别留意后开放对话。请勿透露银行卡、验证码；涉及金钱往来请先核实对方身份。"},
         {t:"in",x:"你好，看到我们同届，也都报了校友会的活动，很高兴认识你"},
         {t:"out",x:"你好呀～我目前在内容平台做运营"},
         {t:"in",x:"周末校友会有活动，一起？"}]},
  {id:5,name:"周宛清",last:"（待回应）你好，我是2018届周宛清…",time:"昨天",unread:0,state:"pending",
-  msgs:[{t:"sys",x:"你发出了心动申请，对方回应前不能重复发送。"},
+  msgs:[{t:"sys",x:"你发出了特别留意申请，对方回应前不能重复发送。"},
         {t:"out",x:"你好，我是2018届周宛清，看到你也在上海，想认识一下～"}]},
  {id:8,name:"崔明轩",last:"已由系统拦截：疑似含联系方式",time:"周一",unread:0,state:"blocked",
   msgs:[{t:"out",x:"你好"},
@@ -270,9 +270,121 @@ const LOGS = [
  {t:"10-15 11:09",u:"系统",a:"导出操作被拦截：单次导出超过 50 条需校友会主任审批",r:"自动",ip:"—"}
 ];
 
-let S = {role:null,tab:"home",page:"login",stack:[],profile:null,chat:null,filters:{grad:"",city:"",ind:"",edu:"",kw:"",stage:""},
-  liked:{},likesLeft:5,parentBind:"pending",toastT:null,consent:{privacy:false,rules:false},subRole:2,joined:{}};
+/* ---------- 校友互助（与小程序 services/mock.js 同一套定义） ---------- */
+const BBS_KINDS = [
+  {k:"ask",        n:"求助问答", ico:"🙋", d:"遇到具体的事，来问校友",  defAudience:"all"},
+  {k:"share",      n:"经验分享", ico:"💡", d:"走过弯路，讲给后来人",    defAudience:"all"},
+  {k:"opportunity",n:"内推机会", ico:"📮", d:"自己公司或熟人的岗位",    defAudience:"alum"}
+];
+const BBS_KIND_MAP = BBS_KINDS.reduce((m,x)=>(m[x.k]=x,m),{});
+const BBS_TAGS = ["升学","选科","竞赛","标化","留学","签证","实习","求职","行业","职业规划",
+  "创业","心理","家庭","育儿","法律","财税","医疗","校园生活","读书","其他"];
+const BBS_LIMITS = {titleMax:40,bodyMax:1000,replyMax:500,tagsMax:4,postPerDay:3,postPerWeek:10,replyPerDay:10};
+const ago = h => {
+  if(h<1) return "刚刚";
+  if(h<24) return h+" 小时前";
+  const d=Math.floor(h/24); return d<30 ? d+" 天前" : Math.floor(d/30)+" 个月前";
+};
+const POSTS = [
+ {id:"ps1",kind:"ask",audience:"all",author:"苏**",grad:2016,ind:"咨询",
+  title:"想从金融转互联网，需要提前准备什么？",
+  body:"我在咨询行业做了六年，对数据岗一直有兴趣，但不确定自己现在转还来不来得及。想问转过来的校友几个问题：\n\n1. 需要补哪些硬技能？\n2. 简历上要不要写原来的行业？\n3. 年龄算劣势吗？",
+  tags:["求职","职业规划"],thanks:6,replyCount:3,viewCount:128,state:"open",solved:false,h:5,lastH:1,mine:false,thanked:false,
+  replies:[
+   {author:"陆**",grad:2013,body:"同为转过来的。硬技能其实 SQL 加一点 Python 就够入门，真正卡人的是行业术语和业务逻辑，建议先做一个自己的小项目。",at:"3 小时前"},
+   {author:"何**",grad:2019,body:"简历一定要写原来的行业，咨询背景在数据岗很吃香，别自己先减分。",at:"2 小时前"},
+   {author:"林**",grad:2014,body:"年龄不是问题，但我们组确实更看重能不能直接上手。提前准备一段可讲的案例会很有用。",at:"1 小时前"}]},
+ {id:"ps2",kind:"share",audience:"all",author:"林**",grad:2014,ind:"教育",
+  title:"选科走过弯路，说三件当时没人提醒我的事",
+  body:"当年选科时只看哪科分高，选完才发现专业可选范围窄了很多。写出来给还在选科的学弟学妹：\n\n一、别只看分数，看目标专业选科要求。\n二、兴趣要能被坚持三年以上，不是当下的新鲜感。\n三、当时没人告诉我，走一步看一步也不是坏事。",
+  tags:["选科","升学"],thanks:24,replyCount:8,viewCount:412,state:"open",solved:false,h:50,lastH:6,mine:false,thanked:false,
+  replies:[
+   {author:"王**",grad:2020,body:"第二条太真实了，我当时就是图新鲜选的，第二年就后悔了。",at:"昨天"},
+   {author:"张**",grad:2015,body:"补充一点：选完也不是不能改，大一转专业的机会要提前打听清楚。",at:"昨天"}]},
+ {id:"ps3",kind:"opportunity",audience:"alum",author:"周**",grad:2012,ind:"互联网",
+  title:"我们组有一个数据分析岗，校招也可看",
+  body:"公司不算大，但组里带的人还不错，不卷。有兴趣的校友可以在下面回复，说一下你的方向。\n\n岗位方向：数据分析、商业分析。\n要求：会 SQL，有 Python 基础优先。\n地点：上海。",
+  tags:["求职","行业"],thanks:3,replyCount:2,viewCount:76,state:"open",solved:false,h:20,lastH:3,mine:false,thanked:false,
+  replies:[
+   {author:"顾**",grad:2018,body:"方便说一下团队规模吗？我目前在做数据方向。",at:"4 小时前"},
+   {author:"周**",grad:2012,body:"八个人，两个数据。私信我细说。",at:"3 小时前"}]},
+ {id:"ps4",kind:"ask",audience:"all",author:"一位家长",grad:"",ind:"",
+  title:"孩子想读美研，需要现在开始准备什么？",
+  body:"孩子高二在读，成绩中等偏上，最近开始想美研。想请教读过美研的校友，或者家里正在准备的家长：\n\n语言考试大概什么时候开始准备合适？\n背景提升方面，哪些是真正有用的？",
+  tags:["留学","升学"],thanks:9,replyCount:5,viewCount:203,state:"open",solved:false,h:30,lastH:2,mine:false,thanked:false,
+  replies:[
+   {author:"崔**",grad:2019,body:"语言建议高二下开始，不要拖到申请季，那时候心智全在文书上。",at:"5 小时前"},
+   {author:"叶**",grad:2019,body:"背景提升看专业，理工科看重科研或竞赛，商科更看实习，别一概而论。",at:"4 小时前"}]},
+ {id:"ps5",kind:"share",audience:"all",author:"何**",grad:2019,ind:"医疗",
+  title:"护士执业考试，一次过的三个准备习惯",
+  body:"去年一次过，成绩不算高但也没靠运气。三个习惯分享给还在准备的同学：\n\n一、开始前先把往年题做一套，知道考什么再学。\n二、每天固定一小时，不靠临时抱佛脚。\n三、错题单独整理，两周后重做一遍。",
+  tags:["职业规划","读书"],thanks:15,replyCount:4,viewCount:260,state:"open",solved:false,h:72,lastH:9,mine:false,thanked:false,
+  replies:[
+   {author:"苏**",grad:2016,body:"错题两周后重做这条最实在，我当年就是一直往前赶，回头全忘了。",at:"昨天"}]},
+ {id:"ps6",kind:"opportunity",audience:"alum",author:"吴**",grad:2011,ind:"金融",
+  title:"律所招暑期实习生，校友可推荐",
+  body:"我们所在团队今年有两个暑期实习名额，重沟通和书面表达，不卡学校。有兴趣的校友可以回复，我拉个群细说。",
+  tags:["实习","行业"],thanks:1,replyCount:1,viewCount:45,state:"open",solved:false,h:12,lastH:4,mine:false,thanked:false,
+  replies:[
+   {author:"叶**",grad:2019,body:"感兴趣，我目前在做合规方向。",at:"6 小时前"}]},
+ {id:"ps7",kind:"ask",audience:"all",author:"张**",grad:2015,ind:"制造业",
+  title:"孩子叛逆期，不愿沟通，怎么开口？",
+  body:"孩子初中之后明显不愿意跟我说话，问什么都敷衍。想问问其他家长，你们是怎么重新建立沟通的？我不想用讲道理的方式。",
+  tags:["家庭","育儿"],thanks:11,replyCount:6,viewCount:187,state:"closed",solved:true,h:160,lastH:60,mine:false,thanked:false,
+  replies:[
+   {author:"李**",grad:2010,body:"我的经验是少问「今天怎么样」，改成一起做点事，做事的时候话自然就出来了。",at:"3 天前"},
+   {author:"沈**",grad:2020,body:"讲道理一定没用。先承认你也不知道怎么办，孩子反而愿意说。",at:"3 天前"}]}
+];
 
+/* ---------- 家长圈（与小程序 services/mock.js 同一套定义） ---------- */
+const AGE_RANGE = [
+  {k:"u35",n:"35 岁以下", d:"同龄家长，孩子多在读"},
+  {k:"a40",n:"35–44 岁",  d:"孩子多在高中或大学初期"},
+  {k:"a50",n:"45–54 岁",  d:"孩子多在升学与选校阶段"},
+  {k:"a60",n:"55 岁以上", d:"孩子多已工作，经验最足"},
+  {k:"na", n:"不便透露",   d:"卡片上不显示年龄"}
+];
+const AGE_TEXT = AGE_RANGE.reduce((m,x)=>(m[x.k]=x.n,m),{});
+const RESOURCE_PRESET = ["行业信息","升学规划","选科规划","竞赛信息","海外求职","职业规划",
+  "留学签证","实习内推","医疗资源","法律财税","心理支持","行业人脉"];
+const PGROUP = [
+ {id:"pg1",name:"陈**",city:"上海",ind:"金融",age:"a50",grad:2016,school:"哥伦比亚大学",
+  intro:"在投行做了十五年，见过不少孩子读研选校时踩坑，愿意聊聊。",
+  resource:["行业信息","海外求职","职业规划"],wants:["教育规划","孩子升学"],
+  motto:"把见过的弯路说给孩子听"},
+ {id:"pg2",name:"李**",city:"北京",ind:"科技",age:"a40",grad:2017,school:"清华大学",
+  intro:"孩子正在读高二，选科和竞赛方向想找同届家长交流经验。",
+  resource:["选科规划","竞赛信息"],wants:["海外升学","职业方向"],
+  motto:"每个孩子的路径都不一样"},
+ {id:"pg3",name:"王**",city:"深圳",ind:"医疗",age:"a50",grad:2018,school:"香港大学",
+  intro:"在三甲医院工作，想认识医疗专业的家长和往届校友。",
+  resource:["医学路径","医院实习","职业规划"],wants:["教育规划","海外升学"],
+  motto:"慢就是快"},
+ {id:"pg4",name:"张**",city:"上海",ind:"教育",age:"a40",grad:2019,school:"华东师范大学",
+  intro:"在国际学校做课程研发，想了解教育行业近几年的变化。",
+  resource:["教育行业","教师资格"],wants:["行业信息"],
+  motto:"教育是慢功夫"},
+ {id:"pg5",name:"刘**",city:"海外",ind:"金融",age:"na",grad:2015,school:"伦敦政治经济学院",
+  intro:"孩子在伦敦读书，家里人想认识同样在海外的家长。",
+  resource:["海外生活","签证信息"],wants:["教育规划"],
+  motto:"孩子开心最重要"}
+];
+const PTHREADS = [
+ {id:"pt1",peer:"王**",city:"深圳",ind:"医疗",age:"a50",
+  last:"我们也在看，孩子更倾向先考执业医再看要不要读研。",at:"昨天",
+  msgs:[{t:"out",x:"您好，看到您在深圳，想请教一下医学方向的读研选择。"},
+        {t:"in", x:"我们也在看，孩子更倾向先考执业医再看要不要读研。你们那边有了解过的吗？"},
+        {t:"out",x:"我打听了一圈，临床方向确实更看重规培路径，可以找医疗专业的往届校友聊聊。"}]}
+];
+
+let S = {role:null,tab:"home",page:"login",stack:[],profile:null,chat:null,filters:{grad:"",city:"",ind:"",edu:"",kw:"",stage:""},
+  liked:{},likesLeft:5,parentBind:"pending",toastT:null,consent:{privacy:false,rules:false},subRole:2,joined:{},
+  /* 校友互助 */
+  bbsKind:"",bbsSort:"new",bbsMineOpen:false,bbsMineTab:"post",bbsId:null,bbsThank:{},
+  bbsNew:{kind:"ask",title:"",body:"",tags:[],audience:"all"},
+  /* 家长圈 */
+  pgTab:"find",pgKw:"",pgSheet:null,pgChatId:null,
+  pgMine:{city:"上海",ind:"",age:"na",intro:"",motto:"",resource:[],wants:[]}};
 /* ============ 框架：工具 / 路由 / 登录 / 校友端 ============ */
 const P=id=>document.getElementById(id);
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -309,7 +421,6 @@ function pick(k,v){
    <button class="btn ghost" style="margin-top:14px" onclick="closeSheet()">完成</button>`,"筛选 · "+lb);
 }
 function openChat(id){S.arg=id;S.page="chat";render();}
-
 /* ============ 家长端 / 老师端 / 管理员端 ============ */
 function pgParentMe(){
   P("nav-title").textContent="我的";
@@ -317,6 +428,10 @@ function pgParentMe(){
   <div class="card">
    <div class="between" style="padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer" onclick="parentBindSheet()">
      <div><div class="small b">绑定关系</div><div class="muted" style="font-size:11px">${esc(CHILD.name)}（${CHILD.grad}届 · ${esc(CHILD.relation)}）</div></div><span class="muted small">查看详情 ›</span></div>
+   <div class="between" style="padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer" onclick="S.page='pgroupMe';render()">
+     <div><div class="small b">我的背景介绍</div><div class="muted" style="font-size:11px">所在地 / 行业 / 年龄段 · 孩子看不到</div></div><span class="muted small">编辑 ›</span></div>
+   <div class="between" style="padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer" onclick="S.tab='pgroup';render()">
+     <div><div class="small b">家长圈</div><div class="muted" style="font-size:11px">找家长 · 我的沟通</div></div><span class="muted small">进入 ›</span></div>
    <div class="between" style="padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer" onclick="S.page='parentVis';render()">
      <div><div class="small b">我能看到的范围</div><div class="muted" style="font-size:11px">届别 / 院校 / 城市 / 行业，不含单位与照片</div></div><span class="muted small">查看 ›</span></div>
    <div class="between" style="padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer" onclick="showPolicy('parent')">
@@ -387,7 +502,7 @@ function pgStaffRisk(){
   <div class="card">
    ${[["内容安全","申请语、照片、昵称均接入官方检测接口，命中即拦截","运行中"],
       ["骚扰抑制","24 小时内向 5 人以上发相同内容 → 限制发送","运行中"],
-      ["频次限制","每日心动 ≤3 次、每周 ≤10 次","运行中"],
+      ["频次限制","每日特别留意 ≤3 次、每周 ≤10 次","运行中"],
       ["反诈提示","命中「转账 / 投资 / 返利」等词 → 弹窗提醒并上报","运行中"],
       ["异常登录","异地或多设备登录 → 二次校验","运行中"],
       ["批量导出","单账号单日导出超过 100 条 → 冻结并告警","运行中"]]
@@ -427,7 +542,6 @@ function pgAdminLog(){
 
 function tick(){const d=new Date();P("sb-time").textContent=d.getHours()+":"+String(d.getMinutes()).padStart(2,"0");}
 tick();setInterval(tick,30000);render();
-
 /* ============ v2：第三方批判后的补齐 ============ */
 document.head.insertAdjacentHTML("beforeend",`<style>
 body.big #phone{font-size:17px}
@@ -489,10 +603,10 @@ function pgVerify(){
   <div class="card">
    <div class="step"><div class="n done">✓</div><div><div class="b small">微信实名校验</div><div class="muted" style="font-size:11px">已通过 · 不留存身份证号</div></div></div>
    <div class="step"><div class="n done">✓</div><div><div class="b small">学籍库届别比对</div><div class="muted" style="font-size:11px">匹配到 2018 届 B 班 · 校友编号 A20180XX</div></div></div>
-   <div class="step"><div class="n">3</div><div><div class="b small">人工复核（校友会）</div><div class="muted" style="font-size:11px">1–2 个工作日；期间可浏览名录，暂时不能发起心动与连接</div></div></div>
+   <div class="step"><div class="n">3</div><div><div class="b small">人工复核（校友会）</div><div class="muted" style="font-size:11px">1–2 个工作日；期间可浏览名录，暂时不能发起特别留意与连接</div></div></div>
    <div class="step" style="border:none"><div class="n">4</div><div><div class="b small">邀请码核销（可选）</div><div class="muted" style="font-size:11px">由已认证校友或校友会发放，便于初期有序开放</div></div></div>
   </div>
-  <div class="notice">复核期间：你可以浏览名录与活动，暂时不能发起心动与连接，也不会出现在推荐里。</div>
+  <div class="notice">复核期间：你可以浏览名录与活动，暂时不能发起特别留意与连接，也不会出现在推荐里。</div>
   <div class="card"><div class="b small" style="margin-bottom:6px">如果实名没有通过？</div>
    <div class="small muted">可以走人工通道，提交毕业证或学位证；连续 3 次未通过会自动转人工，7 个工作日内答复。</div></div>
   <div style="margin:14px 12px"><button class="btn" onclick="toast('已提交，校友会会在 1–2 个工作日内完成复核');S.page='role';render()">提交认证</button>
@@ -542,7 +656,7 @@ function pgParentVis(){
   const rows=[["届别与班级","开","建议开启"],["本科院校","开",""],["研究生院校","开",""],
    ["工作城市","开","可只显示国家"],["行业","开",""],["单位名称","关","对家长永久不显示"],
    ["职位","开","仅显示方向"],["照片","关","对家长永久不显示"],["兴趣标签","开",""],
-   ["想认识怎样的校友","关","不向家长展示"],["牵线记录","开","便于和你沟通"],["访客记录","开","家长查看会被记录"]];
+   ["希望多认识哪些校友","关","不向家长展示"],["牵线记录","开","便于和你沟通"],["访客记录","开","家长查看会被记录"]];
   P("page").innerHTML=`
   <div class="notice b">逐字段决定家长能看到什么。默认只对家长开放最少的信息；单位名称与照片对家长永久不显示。</div>
   <div class="card">${rows.map(([f,s,note])=>{const lock=note&&(note.includes("永久")||note.includes("不向家长展示"));return `<div class="between" style="padding:10px 0;border-bottom:1px solid var(--line)">
@@ -595,7 +709,7 @@ function pgAdminHome(){
   <div class="grid2" style="margin:10px 12px">
     <div class="stat"><div class="n">486</div><div class="l">校友 / 认证率 92%</div></div>
     <div class="stat"><div class="n">31%</div><div class="l">周活跃（近 7 天）</div></div>
-    <div class="stat"><div class="n">17</div><div class="l">互为心动（累计）</div></div>
+    <div class="stat"><div class="n">17</div><div class="l">互相特别留意（累计）</div></div>
     <div class="stat"><div class="n">0</div><div class="l">数据安全事件</div></div>
   </div>
   <div class="sec-title"><b>上线前合规清单</b></div>
@@ -614,13 +728,12 @@ function pgAdminHome(){
   <div class="card"><div class="b small" style="margin-bottom:8px">可见性矩阵（各端一致）</div>
    <table class="matrix"><tr><th>字段</th><th>校友</th><th>家长</th><th>老师</th></tr>
     ${[["届别/院校","✔","✔","✔"],["行业/城市","✔","✔","✔"],["单位名称","按本人设置","✘","需事由"],
-      ["照片","本人逐张授权","✘","仅审核期"],["对话","仅双向心动后","✘","仅抽检"],["联系方式","确认后仅双方可见","✘","✘"]]
+      ["照片","本人逐张授权","✘","仅审核期"],["对话","仅双方都特别留意后","✘","仅抽检"],["联系方式","确认后仅双方可见","✘","✘"]]
      .map(r=>`<tr><td class="l">${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join("")}</table></div>
   <div class="card"><div class="b small" style="margin-bottom:6px">治理与应急</div>
    <div class="small muted" style="line-height:1.8">校友会下设 3 人内容小组（干事 + 教师 + 校友代表），封禁与争议由两人共同复核；数据异常 1 小时内冻结导出、72 小时内报告。</div></div>
   <div class="notice">建议上线节奏：邀请制内测（50 位校友 + 10 位家长）→ 校友会复核 → 按届别分批开放。</div>`;
 }
-
 
 /* ============ v3：第二轮批判后的补齐 ============ */
 function whyRec(){sheet(`
@@ -634,7 +747,7 @@ function whyRec(){sheet(`
  ✘ 照片数量、被关注次数、被查看次数<br>
  ✘ 院校排名<br><br>
  <b>公平性</b><br>
- 每次只推 3 位，同一批里同一届不超过 2 人；已经关注或心动过的校友不会重复出现。</div>
+ 每次只推 3 位，同一批里同一届不超过 2 人；已经关注或特别留意过的校友不会重复出现。</div>
  <button class="btn ghost" style="margin-top:12px" onclick="closeSheet();toast('已减少这类推荐')">减少这类推荐</button>`,"为什么推荐 TA？");}
 
 function editProfile(){sheet(`
@@ -664,6 +777,14 @@ function pgParentHome(){
       <div class="small muted">已绑定：${esc(CHILD.name)}（${CHILD.grad}届 · ${esc(CHILD.relation)}）</div>
       <div class="small" style="margin-top:4px;color:#0a6b34">✔ 子女已确认 · 可见范围受限</div></div>
     <span class="muted">›</span></div></div>
+  <div class="card" onclick="S.tab='pgroup';render()"><div class="row">
+    <div class="avatar av-56" style="background:#F08A3C">👥</div>
+    <div style="flex:1"><b>家长圈</b> <span class="muted small">家长之间直接沟通</span>
+      <div class="small muted" style="margin-top:3px">同为家长，手里有行业、经验和信息差。找到聊得来的人直接聊，不需要先等孩子互相特别留意。</div></div>
+    <span class="muted">›</span></div>
+    <div class="row" style="margin-top:11px;gap:8px">
+      <button class="btn mini ghost" style="flex:1" onclick="event.stopPropagation();S.tab='pgroup';render()">找家长 ›</button>
+      <button class="btn mini ghost" style="flex:1" onclick="event.stopPropagation();S.page='pgroupMe';render()">编辑我的背景介绍 ›</button></div></div>
   <div class="notice p"><b>你可以看到哪些信息</b><br>
    ✔ 届别、班级、本科与研究生院校、工作城市、行业、兴趣标签<br>
    ✘ 具体单位名称、职位、照片、对话内容、联系方式、实时位置<br>
@@ -727,11 +848,11 @@ function pgAdminPerm(){
   const m=[["届别/班级","✔","✔","✔"],["本科院校","✔","✔","✔"],["研究生院校","✔","✔","✔"],
    ["工作城市","✔","✔","✔"],["行业","✔","✔","✔"],["单位名称","按本人设置","✘","✔(需事由)"],
    ["职位","按本人设置","✘","✔"],   ["照片","需本人逐张授权","✘","仅审核期"],
-   ["破冰消息","仅双向心动后","✘","✘（仅抽检）"],["联系方式","确认后仅双方可见","✘","✘"],
-   ["想认识谁 / 心动记录","仅本人","✘","✘"],
+   ["第一条消息","仅双方都特别留意后","✘","✘（仅抽检）"],["联系方式","确认后仅双方可见","✘","✘"],
+   ["想认识谁 / 特别留意记录","仅本人","✘","✘"],
    ["家长牵线记录","本人可见","仅自己提交","仅统计"],
    ["证件材料","本人","✘","仅审核期"],
-   ["老师心动/匹配","不适用","不适用","老师不参与推荐"]];
+   ["老师特别留意/匹配","不适用","不适用","老师不参与推荐"]];
   P("page").innerHTML=`<div class="small muted" style="padding:10px 12px 0">默认最小可见；任何放大权限都需本人单独同意并留存记录。</div>
   <div class="card" style="padding:8px">
    <div class="row small" style="padding:6px 0;border-bottom:1px solid var(--line)">
@@ -783,13 +904,11 @@ function pgChatDetail(){
      <button class="btn mini ghost" style="flex:1" onclick="reportSheet(${c.id})">举报</button></div>
    <div class="small muted" style="margin-top:8px">检测：敏感词 · 外部联系方式 · 涉诈关键词（转账/投资/返利）</div></div>`;
 }
-
 /* ============ v4：本文件已清空 ============
    原本在这里的 pgRole / pgRoster 等函数早已被 11_v7.js 覆盖，属于死代码，
    已在「删除重复函数」一轮中移除。
    保留这个空文件，是为了不打乱既定的拼接命令（01 + 02~11 + 05）与各处文档里的说明。
    ======================================== */
-
 /* ================= v3.0：按评估意见重构 ================= */
 /* 数据增强：教育经历、连接关系、家长对家长 */
 ALUMNI.forEach((a,i)=>{
@@ -873,16 +992,16 @@ function pgProfile(){
     ${isAlum?`
     <div class="row" style="margin-top:12px;gap:8px">
       <button class="btn mini ${a.follow?"":"ghost"}" style="flex:1" onclick="doFollow(${a.id})">${a.follow?"已关注 ★":"关注 ★"}</button>
-      <button class="btn mini ${liked?"":"ghost"}" style="flex:1" onclick="doLike(${a.id})">${liked?"已心动 💗":"心动 💗"}</button>
+      <button class="btn mini ${liked?"":"ghost"}" style="flex:1" onclick="doLike(${a.id})">${liked?"已特别留意":"特别留意"}</button>
       <button class="btn mini ${matched?(a.unlock==="done"?"":""):"gray"}" style="flex:1" onclick="doUnlock(${a.id})">
-        ${a.unlock==="done"?"已换微信":(matched?"申请换微信 🔑":"需双向匹配")}</button>
+        ${a.unlock==="done"?"已换联系方式":(matched?"申请换联系方式 🔑":"需已建立联系")}</button>
     </div>
     <div class="muted small" style="margin-top:8px;text-align:center">
-      关注（对方只看到计数）→ 心动（对方可见你是谁）→ 双向匹配后可申请交换微信</div>`:""}
+      关注（对方只看到计数）→ 特别留意（对方可见你是谁）→ 已建立联系后可申请交换联系方式</div>`:""}
     ${isParent?`<div class="row" style="margin-top:12px;gap:8px">
       <button class="btn mini" style="flex:1" onclick="parentLike(${a.id})">觉得合适 → 推给对方家长</button>
       <button class="btn mini ghost" style="flex:1" onclick="toast('已收藏（仅你自己可见）')">收藏</button></div>
-      <div class="muted small" style="margin-top:8px;text-align:center">家长不能替子女完成心动与交换微信，也不能看到子女的任何操作</div>`:""}
+      <div class="muted small" style="margin-top:8px;text-align:center">家长不能替子女完成特别留意与交换联系方式，也不能看到子女的任何操作</div>`:""}
     ${v==="staff"?`<div class="row" style="margin-top:12px;gap:8px">
       <button class="btn mini ghost" style="flex:1" onclick="toast('查看已留痕：王老师 10-17 09:12')">留痕查看</button>
       <button class="btn mini ghost" style="flex:1" onclick="toast('已发送学籍核验请求')">核验</button></div>`:""}
@@ -901,14 +1020,14 @@ function pgProfile(){
     <div class="small" style="margin-top:12px;line-height:1.7">${esc(a.intro)}</div>
     <div style="margin-top:10px">${a.tags.map(t=>`<span class="chip">${esc(t)}</span>`).join("")}</div></div>
 
-  ${a.seek!=="closed"?`<div class="card"><div class="b" style="margin-bottom:8px">想认识怎样的校友</div>
+  ${a.seek!=="closed"?`<div class="card"><div class="b" style="margin-bottom:8px">希望多认识哪些校友</div>
     <div class="kv"><span class="k">当前</span><span>${({open:"想认识新朋友",friends:"仅限校友社交",closed:"暂不参与"})[a.seek]}</span></div>
     <div class="kv"><span class="k">想认识的城市</span><span>${a.expect.city.map(esc).join("、")}</span></div>
     <div class="kv" style="border:none"><span class="k">异地</span><span>${esc(a.expect.longDistance)}</span></div></div>`
    :`<div class="card"><div class="notice" style="margin:0">这位校友已设置为暂不参与推荐，资料卡只展示校友信息。</div></div>`}
 
   ${isAlum?`<div class="card"><div class="row" style="gap:8px">
-    <button class="btn ghost sm" style="flex:1" onclick="toast('已屏蔽，对方无法再查看你或发起心动')">屏蔽</button>
+    <button class="btn ghost sm" style="flex:1" onclick="toast('已屏蔽，对方无法再查看你或发起特别留意')">屏蔽</button>
     <button class="btn ghost sm" style="flex:1" onclick="reportSheet(${a.id})">举报</button></div>
     <div class="muted small center" style="margin-top:8px">资料卡截图会带水印，仅用于追溯来源</div></div>`:""}
   <div class="footer-note">页面带水印 · 本次查看会留痕</div>`;
@@ -919,7 +1038,7 @@ function pgWechat(){
   P("page").innerHTML=`
   <div class="notice b">双方均已确认，联系方式已解锁。请仅用于本人联络，<b>不得转发给第三方</b>。</div>
   <div class="card"><div class="row">${av(a,"av-56")}
-    <div style="flex:1"><b>${esc(a.name)}</b> <span class="tag g">${a.grad}届 · 双向匹配</span>
+    <div style="flex:1"><b>${esc(a.name)}</b> <span class="tag g">${a.grad}届 · 已建立联系</span>
     <div class="small muted">${esc(a.ug.s)} · ${esc(a.city)} · ${esc(a.ind)}</div></div></div>
     <div class="divider"></div>
     <div class="kv"><span class="k">微信号</span><span style="font-family:ui-monospace,Menlo,monospace">${esc(a.wechat)}</span></div>
@@ -957,8 +1076,8 @@ function pgParentMatch(){
   <div class="card"><div class="b" style="margin-bottom:6px">家长权限边界</div>
    <div class="small muted" style="line-height:1.8">
    ① 家长<b>不能</b>直接给毕业生发消息，只能联系对方家长<br>
-   ② 家长<b>不能</b>替孩子完成心动或交换微信的确认<br>
-   ③ 家长<b>看不到</b>孩子关注了谁、心动了谁 —— 这部分完全属于孩子本人</div></div>
+   ② 家长<b>不能</b>替孩子完成特别留意或交换联系方式的确认<br>
+   ③ 家长<b>看不到</b>孩子关注了谁、特别留意了谁 —— 这部分完全属于孩子本人</div></div>
   <div class="card"><div class="b small" style="margin-bottom:6px">沟通内容也会被检测</div>
    <div class="small muted">家长之间的消息同样会过内容安全检测；出现索要住址、收入、财产信息或金钱往来，会提示并上报校友会。</div></div>`;
 }
@@ -985,15 +1104,14 @@ function parentLike(id){const a=ALUMNI.find(x=>x.id===id);
    1) 你的意向推送给<b>对方家长</b>，不推送给毕业生本人<br>
    2) 对方家长回应后，双方家长可站内信沟通<br>
    3) 双方家长谈妥后，各自做孩子工作<br>
-   4) 最终由两位毕业生本人完成心动与交换微信<br><br>
+   4) 最终由两位毕业生本人完成特别留意与交换联系方式<br><br>
    <b>不会发生什么</b><br>
    · 对方不会知道你孩子的名字（只显示届别与姓氏首字）<br>
-   · 你看不到孩子关注了谁、心动了谁<br>
+   · 你看不到孩子关注了谁、特别留意了谁<br>
    · 平台不会替任何一方答应</div>
    <textarea class="input" style="height:70px;padding:10px;margin-top:10px" placeholder="给对方家长的一段话（不含收入、房产、住址）"></textarea>
    <button class="btn" style="margin-top:12px" onclick="closeSheet();toast('已推送给对方家长 · 48h 未回应自动失效')">推送给对方家长</button>
    <button class="btn ghost" style="margin-top:8px" onclick="closeSheet()">取消</button>`,"觉得合适");}
-
 /* ================= 学校背书预填、解绑、排序屏蔽、合规 ================= */
 
 /* ---------- 校友端「我的」：加解绑家长、资料完整度 ---------- */
@@ -1012,7 +1130,7 @@ function pgAlumMe(){
    <div class="kv" style="border:none"><span class="k">来源</span><span class="tag g">学校升学去向库自动导入</span></div>
    <div class="muted" style="font-size:11px;margin-top:8px">学历由学校升学去向库导入，你无需自行填写或上传学位证；如有出入可申请更正，由校友会复核。</div></div>
   <div class="grid2" style="margin:0 12px">
-    <div class="stat" onclick="toast('每天 ${3} 次 · 每周 ${10} 次，次日 0 点重置')"><div class="n">${S.likesLeft}</div><div class="l">今日可心动</div></div>
+    <div class="stat" onclick="toast('每天 ${3} 次 · 每周 ${10} 次，次日 0 点重置')"><div class="n">${S.likesLeft}</div><div class="l">今日可特别留意</div></div>
     <div class="stat" onclick="toast('关注是单向静默的，不会显示是谁')"><div class="n">12</div><div class="l">关注我的人</div></div>
   </div>
   <div class="sec-title"><b>家长绑定</b></div>
@@ -1138,12 +1256,11 @@ function pgTech(){
    <div class="small" style="line-height:1.9">
    <b>主要看这些</b>：同城或目标城市重合、届别相近（±3 届）、共同兴趣、目标行业重合。<br>
    <b>新注册的校友</b>：7 天内有更多展示机会；同一批推荐中，同一届不超过 3 人。<br><br>
-   <b>不参与排序</b>：照片数量、被心动次数、被查看次数、院校排名、收入与家庭背景。</div></div>
+   <b>不参与排序</b>：照片数量、被特别留意次数、被查看次数、院校排名、收入与家庭背景。</div></div>
   <div class="card"><div class="b small" style="margin-bottom:8px">联系方式的展示方式</div>
    <div class="small" style="line-height:1.9">双方各自确认后，才能在名片页看到联系方式；名片页带浏览者水印，30 天后自动隐藏。</div></div>
   <button class="btn gray" style="margin:6px 12px" onclick="S.page='main';render()">返回</button>`;
 }
-
 
 /* ============ v4.0：吸收"独立方案"后的改进 ============ */
 document.head.insertAdjacentHTML("beforeend",`<style>
@@ -1226,7 +1343,7 @@ function pgParentIntro(){
   <div class="card"><div class="b small" style="margin-bottom:6px">⚠️ 确认 ≠ 同意</div>
    <div class="small muted" style="line-height:1.8">
    点「愿意了解」<b>不会</b>向对方发出任何意向，也不解锁任何联系方式。它只做一件事：把这位校友放进你可以自主选择的池子里。<br><br>
-   之后是否关注、是否心动、是否交换微信，全部由你自己一步步决定，平台不会替你走完。</div></div>
+   之后是否关注、是否特别留意、是否交换联系方式，全部由你自己一步步决定，平台不会替你走完。</div></div>
   ${t.state==="pending"?`<div style="margin:6px 12px">
     <button class="btn" onclick="confirmIntro('${t.id}')">愿意了解（仅自己可见）</button>
     <button class="btn ghost" style="margin-top:8px" onclick="declineIntro('${t.id}')">暂不感兴趣</button>
@@ -1235,7 +1352,7 @@ function pgParentIntro(){
 }
 function confirmIntro(id){const t=PARENT_INTROS.find(x=>x.id===id);t.state="done";
   sheet(`<div class="small" style="line-height:1.8">已标记为「愿意了解」。<br><br>
-   接下来由你决定：<br>· 想先看资料 → 去名录<br>· 想让对方知道你 → 发心动（对方可见你是谁）<br>· 只想静静观察 → 用关注（对方只看到计数）<br><br>
+   接下来由你决定：<br>· 想先看资料 → 去名录<br>· 想让对方知道你 → 发特别留意（对方可见你是谁）<br>· 只想静静观察 → 用关注（对方只看到计数）<br><br>
    <b>平台不会替你发出任何东西。</b></div>
    <button class="btn" style="margin-top:12px" onclick="closeSheet();S.arg=${t.tid};S.page='main';render()">去看 TA 的资料卡</button>
    <button class="btn ghost" style="margin-top:8px" onclick="closeSheet();S.page='main';S.tab='chat';render()">先不用</button>`,"已确认");}
@@ -1281,15 +1398,15 @@ function pgRoster(viewer){
 function doLike(id){
   const a=ALUMNI.find(x=>x.id===id);
   if(!a||a.id===ME.id){toast("不能对自己发起申请");return;}
-  if(S.connections.liked.includes(id)){S.connections.liked=S.connections.liked.filter(x=>x!==id);toast("已取消心动");render();return;}
+  if(S.connections.liked.includes(id)){S.connections.liked=S.connections.liked.filter(x=>x!==id);toast("已取消特别留意");render();return;}
   if(S.likesLeft<=0){toast("今日额度已用完（每日 3 次），明天再来");return;}
   if(S.likesWeek<=0){toast("本周额度已用完（每周 10 次）");return;}
   S.likesLeft--;S.likesWeek--;S.connections.liked.push(id);
-  sheet(`<div class="small muted" style="margin-bottom:10px">心动后对方可以看到你是谁。附一句话，比只点一下更有诚意（不超过 50 字，不含联系方式）。</div>
+  sheet(`<div class="small muted" style="margin-bottom:10px">特别留意后对方可以看到你是谁。附一句话，比只点一下更有诚意（不超过 50 字，不含联系方式）。</div>
    <textarea class="input" style="height:72px;padding:10px">同为${a.grad}届，看到你也在${a.city}，想认识一下～</textarea>
    <div class="muted small" style="margin-top:6px">已输入 24 / 50 字 · 不含联系方式</div>
-   <button class="btn" style="margin-top:12px" onclick="closeSheet();toast('已心动 · 对方可见你是谁；双向心动即为匹配')">发送心动</button>
-   <button class="btn ghost" style="margin-top:8px" onclick="closeSheet();toast('已心动（未附言）')">不附言，直接心动</button>`,"向 "+a.name+" 表达意向");}
+   <button class="btn" style="margin-top:12px" onclick="closeSheet();toast('已特别留意 · 对方可见你是谁；双方都特别留意即为匹配')">发送特别留意</button>
+   <button class="btn ghost" style="margin-top:8px" onclick="closeSheet();toast('已特别留意（未附言）')">不附言，直接特别留意</button>`,"向 "+a.name+" 表达意向");}
 function doFollow(id){const a=ALUMNI.find(x=>x.id===id);if(!a||a.id===ME.id){toast("不能关注自己");return;}
   a.follow=!a.follow;
   const f=S.connections.followed||(S.connections.followed=[]);
@@ -1298,19 +1415,19 @@ function doFollow(id){const a=ALUMNI.find(x=>x.id===id);if(!a||a.id===ME.id){toa
   render();}
 function doUnlock(id){
   const a=ALUMNI.find(x=>x.id===id);
-  if(!S.connections.matched.includes(id)){toast("需双向心动后才能申请交换微信");return;}
+  if(!S.connections.matched.includes(id)){toast("需双方都特别留意后才能申请交换联系方式");return;}
   if(a.unlock==="done"){S.page="wechat";S.arg=id;render();return;}
   if(a.unlock==="sent"){toast("已发出申请，等待对方独立确认");return;}
   sheet(`<div class="small" style="line-height:1.8">
-   <b>交换微信（双方各自确认）</b><br>
+   <b>交换联系方式（双方各自确认）</b><br>
    你发起 → 对方本人确认 → 双方才能在名片页看到彼此的联系方式。<br>
    只有一方点头不算，也不会由家长代劳。<br><br>
    <b>关于名片页</b><br>
    名片页带浏览者水印，30 天后自动隐藏。<br><br>
    <b>另一种方式</b><br>
    也可以约在校友会活动上见面，由校友会引荐。</div>
-   <button class="btn" style="margin-top:12px" onclick="closeSheet();ALUMNI.find(x=>x.id===${id}).unlock='sent';toast('申请已发出 · 等待对方本人独立确认')">发起交换微信</button>
-   <button class="btn ghost" style="margin-top:8px" onclick="closeSheet();toast('已查看近期校友活动')">改为约在活动见面</button>`,"交换微信");}
+   <button class="btn" style="margin-top:12px" onclick="closeSheet();ALUMNI.find(x=>x.id===${id}).unlock='sent';toast('申请已发出 · 等待对方本人独立确认')">发起交换联系方式</button>
+   <button class="btn ghost" style="margin-top:8px" onclick="closeSheet();toast('已查看近期校友活动')">改为约在活动见面</button>`,"交换联系方式");}
 function parentIntro(id){const a=ALUMNI.find(x=>x.id===id);
  sheet(`<div class="small" style="line-height:1.8">
    <b>为 ${esc(CHILD.name)}（${CHILD.grad}届）提交牵线</b><br>对象：${esc(a.name)} · ${a.grad}届<br><br>
@@ -1319,10 +1436,10 @@ function parentIntro(id){const a=ALUMNI.find(x=>x.id===id);
    2) 双方家长可以互相沟通<br>
    3) 两位家长各自回家问问孩子<br>
    4) <b>两位毕业生各自独立决定</b>——任一方不愿意，流程即终止<br>
-   5) 即便双方都愿意了解，之后的心动与交换微信仍由孩子本人一步步完成<br><br>
+   5) 即便双方都愿意了解，之后的特别留意与交换联系方式仍由孩子本人一步步完成<br><br>
    <b>关键：孩子的「愿意了解」≠ 同意联系</b><br>
    它只把对方放进孩子可自主选择的池子，<b>不会自动发出任何意向，也不解锁联系方式</b>。<br><br>
-   <span class="muted">家长看不到孩子关注了谁、心动了谁。</span></div>
+   <span class="muted">家长看不到孩子关注了谁、特别留意了谁。</span></div>
    <textarea class="input" style="height:70px;padding:10px;margin-top:10px" placeholder="给对方家长的一段话（不含收入、房产、住址）"></textarea>
    <button class="btn" style="margin-top:12px" onclick="closeSheet();toast('已推送给对方家长 · 48h 未回应自动失效')">推送给对方家长</button>
    <button class="btn ghost" style="margin-top:8px" onclick="closeSheet()">取消</button>`,"为孩子牵线");}
@@ -1340,11 +1457,11 @@ function whyOf(a){
 }
 
 function pgAlumHome(){
-  P("nav-title").textContent="ICC国际高中校友圈";P("nav-act").textContent=`今日可心动 ${S.likesLeft}`;
+  P("nav-title").textContent="ICC国际高中校友圈";P("nav-act").textContent=`今日可特别留意 ${S.likesLeft}`;
   P("nav-act").onclick=()=>toast(`每天 3 次 · 每周 10 次，次日 0 点重置（本周还剩 ${S.likesWeek} 次）`);
   // 与小程序的 feed 云函数同一套口径，改一边就要改另一边：
   // 候选限定「届别相差 3 届以内」→ 打分（同城 3 > 共同兴趣 2 > 同届 1.5 > 届别相近 1）
-  // → 一次 3 位，同一批同一届最多 2 位，已经关注或心动过的不重复出现
+  // → 一次 3 位，同一批同一届最多 2 位，已经关注或特别留意过的不重复出现
   const rec=(()=>{
     const seen=(S.connections.liked||[]).concat(S.connections.followed||[],S.connections.matched||[]);
     const mine=ME.tags||[];
@@ -1374,7 +1491,7 @@ function pgAlumHome(){
      <div class="small muted" style="margin-top:8px">📍${esc(a.city)} · ${esc(a.ind)} · ${stageOf(a)}</div>
      <div class="row" style="margin-top:10px;gap:6px">
        <button class="btn mini ${a.follow?"":"ghost"}" style="flex:1" onclick="event.stopPropagation();doFollow(${a.id})">${a.follow?"已关注 ★":"关注"}</button>
-       <button class="btn mini ${S.connections.liked.includes(a.id)?"ghost":""}" style="flex:1" onclick="event.stopPropagation();doLike(${a.id})">${S.connections.liked.includes(a.id)?"已心动 💗":"心动 💗"}</button></div>
+       <button class="btn mini ${S.connections.liked.includes(a.id)?"ghost":""}" style="flex:1" onclick="event.stopPropagation();doLike(${a.id})">${S.connections.liked.includes(a.id)?"已特别留意":"特别留意"}</button></div>
    </div>`).join(""):`<div class="card tight" style="text-align:center;padding:26px 12px">
      <div style="font-size:26px">🌱</div>
      <div class="b small" style="margin-top:6px">暂时没有新的推荐</div>
@@ -1386,9 +1503,9 @@ function pgAlumHome(){
   <div class="sec-title"><b>我的连接</b></div>
   <div class="card tight">
    ${[["我关注的人（静默）",S.connections.followed.length+" 人","",""],
-      ["心动（对方可见）",S.connections.liked.length+" 人","","S.tab='chat';render()"],
-      ["双向匹配",S.connections.matched.length+" 人","g","S.tab='chat';render()"],
-      ["已交换微信","1 人","g","S.page='wechat';S.arg=2;render()"]]
+      ["特别留意（对方可见）",S.connections.liked.length+" 人","","S.tab='chat';render()"],
+      ["已建立联系",S.connections.matched.length+" 人","g","S.tab='chat';render()"],
+      ["已交换联系方式","1 人","g","S.page='wechat';S.arg=2;render()"]]
     .map(([n,v,c,act])=>`<div class="between" style="padding:9px 0;border-bottom:1px solid var(--line)${act?";cursor:pointer":""}" ${act?`onclick="${act}"`:""}>
       <span class="small b">${n}</span><span class="tag ${c}">${v}${act?" ›":""}</span></div>`).join("")}
    <button class="btn mini ghost" style="margin-top:10px;width:100%" onclick="S.tab='chat';render()">查看连接与进度 ›</button></div>
@@ -1397,6 +1514,16 @@ function pgAlumHome(){
     <div class="small muted" style="margin-top:4px">${esc(e.d)} · ${esc(e.p)}</div>
     <div class="between" style="margin-top:8px"><span class="muted small">已报名 ${esc(e.n)}</span>
       <button class="btn mini ${S.joined[e.id]?"gray":""}" onclick="${S.joined[e.id]?"toast('已报名，活动开始前会提醒你')":"S.joined['"+e.id+"']=1;toast('报名成功，具体地址将在审核后通知');render()"}">${S.joined[e.id]?"已报名":"报名"}</button></div></div>`).join("")}
+  <div class="sec-title"><b>校友互助</b><span class="muted" onclick="S.tab='bbs';render()">全部 ›</span></div>
+  ${bbsList().slice(0,2).map(p=>`<div class="card tight" onclick="S.bbsId='${p.id}';S.page='bbsDetail';render()">
+     <div class="row" style="gap:5px;flex-wrap:wrap">
+       <span class="tag" style="background:rgba(7,193,96,.1);color:var(--theme)">${bbsKindName(p.kind)}</span>
+       ${p.audience==="alum"?'<span class="tag">仅校友可见</span>':""}</div>
+     <div class="b small" style="margin-top:5px">${esc(p.title)}</div>
+     <div class="muted" style="font-size:11px;margin-top:4px">💬 ${p.replyCount} 条回复 · 有用 ${p.thanks} · ${ago(p.lastH)}</div></div>`).join("")}
+  <div class="row" style="margin:0 12px;gap:8px">
+    <button class="btn mini ghost" style="flex:1" onclick="S.tab='bbs';render()">校友互助 ›</button>
+    <button class="btn mini ghost" style="flex:1" onclick="S.tab='roster';render()">校友名录 ›</button></div>
   <div class="footer-note">推荐只看契合度，不按热度排名</div>`;
 }
 function pgChat(){
@@ -1405,14 +1532,14 @@ function pgChat(){
   const c2=ALUMNI.find(a=>a.id===2);
   const acts={2:c2.unlock==="done"?["查看微信名片","S.page='wechat';S.arg=2;render()",1]
       :c2.unlock==="sent"?["等待对方确认","toast('已发出申请，等待对方本人确认')",0]
-      :["申请换微信","doUnlock(2)",1],
-    5:["撤回心动","doLike(5)",1],8:["升级为心动","doLike(8)",1]};
-  const m=[{id:2,s:"双向匹配 · 可申请换微信",d:"双方已心动，任一方发起后仍需对方本人确认",c:"g",
+      :["申请换联系方式","doUnlock(2)",1],
+    5:["撤回特别留意","doLike(5)",1],8:["升级为特别留意","doLike(8)",1]};
+  const m=[{id:2,s:"已互相留意 · 可申请换联系方式",d:"双方已特别留意，任一方发起后仍需对方本人确认",c:"g",
     ice:"你好，看到我们同届，也都报了校友会的活动，很高兴认识你"},
-   {id:5,s:"已心动 · 等待对方",d:"你已表达意向，对方心动后即为匹配",c:"o"},
-   {id:8,s:"已关注（静默）",d:"对方不会知道是你；可以升级为心动",c:""}];
+   {id:5,s:"已特别留意 · 等待对方",d:"你已表达意向，对方也特别留意后即建立联系",c:"o"},
+   {id:8,s:"已关注（静默）",d:"对方不会知道是你；可以升级为特别留意",c:""}];
   P("page").innerHTML=`
-  <div class="notice">双向心动后才会开放对话；深聊建议回到微信。</div>
+  <div class="notice">双方都特别留意后才会开放对话；深聊建议回到微信。</div>
   ${pend.length?`<div class="intro-card"><div class="between">
     <div><b>👩 家长转达 · 待你确认</b><div class="muted small" style="margin-top:3px">${esc(pend[0].tname)} · ${esc(pend[0].time)}</div></div>
     <button class="btn mini" onclick="S.arg='${pend[0].id}';S.page='intro';render()">处理 ›</button></div>
@@ -1430,13 +1557,13 @@ function pgChat(){
   <div class="card"><div class="b" style="margin-bottom:6px">连接方式</div>
    <div class="small muted" style="line-height:1.8">
    <b>关注</b>：单向静默，<b>不显示人气数与被关注数</b><br>
-   <b>心动</b>：对方可见你是谁，可附 50 字申请语；双向心动即匹配<br>
-   <b>交换微信</b>：双向匹配后发起，<b>双方各自确认</b>才解锁名片页<br>
-   <b>未双向心动不开放对话</b>：仅在双向心动后互发破冰消息；深聊回到微信</div></div>
+   <b>特别留意</b>：对方可见你是谁，可附 50 字申请语；双方都特别留意即建立联系<br>
+   <b>交换联系方式</b>：已建立联系后发起，<b>双方各自确认</b>才解锁名片页<br>
+   <b>未双方都特别留意不开放对话</b>：仅在双方都特别留意后互发第一条消息；深聊回到微信</div></div>
   <div class="notice r">为保护大家：每天最多 3 次、每周最多 10 次；被拒绝后不能重复发起；短时间内向多人发相同内容会被限制。</div>`;
 }
 function iceSheet(id){const a=ALUMNI.find(x=>x.id===id);
-  sheet(`<div class="small muted" style="margin-bottom:10px">双向心动后可以互发消息。内容会经过检测，不能带外部联系方式。</div>
+  sheet(`<div class="small muted" style="margin-bottom:10px">双方都特别留意后可以互发消息。内容会经过检测，不能带外部联系方式。</div>
    <textarea class="input" style="height:70px;padding:10px" placeholder="说点什么…"></textarea>
    <div class="muted small" style="margin-top:6px">本平台不代收任何费用；涉及金钱往来请先核实对方身份。</div>
    <button class="btn" style="margin-top:12px" onclick="closeSheet();toast('已发送')">发送</button>
@@ -1445,8 +1572,8 @@ function iceSheet(id){const a=ALUMNI.find(x=>x.id===id);
 /* ---- 6. 教职工端：新增「数据概览」 ---- */
 function renderTabs(){
   const map={
-    alum:[["home","ICC国际高中校友圈","✨"],["roster","名录","📖"],["chat","连接","🔗"],["me","我的","🙋"]],
-    parent:[["home","家长首页","🏠"],["roster","名录","📖"],["match","牵线","💌"],["me","我的","🙋"]],
+    alum:[["home","ICC国际高中校友圈","✨"],["roster","名录","📖"],["bbs","互助","🙋"],["chat","连接","🔗"],["me","我的","🙋"]],
+    parent:[["home","家长首页","🏠"],["roster","名录","📖"],["pgroup","家长圈","👥"],["match","牵线","💌"],["me","我的","🙋"]],
     staff:[["review","审核","✅"],["alumni","名录","📖"],["risk","风控","🛡️"],["dash","概览","📈"],["me","我的","🙋"]],
     admin:[["home","总览","📊"],["perm","权限","🔑"],["data","数据权利","🗂️"],["me","审计","🧾"]]
   }[S.role]||[];
@@ -1455,7 +1582,7 @@ function renderTabs(){
 }
 function pgStaffDash(){
   P("nav-title").textContent="数据概览";P("nav-act").textContent="";
-  const f=[["浏览过名录",486,100],["发出关注",128,26],["发出心动",64,13],["双向匹配",17,3.5],["交换微信",9,1.9]];
+  const f=[["浏览过名录",486,100],["发出关注",128,26],["发出特别留意",64,13],["已建立联系",17,3.5],["交换联系方式",9,1.9]];
   P("page").innerHTML=`
   <div class="grid3" style="margin:10px 12px">
     <div class="stat"><div class="n">486</div><div class="l">校友 / 认证 92%</div></div>
@@ -1483,7 +1610,7 @@ function pgStaffDash(){
   <div class="sec-title"><b>教职工能看到 / 看不到</b></div>
   <div class="card"><div class="small muted" style="line-height:1.8">
    能看到：认证进度、审核与举报工单、整体概览、本人的查看留痕<br>
-   看不到：校友之间的对话、家长之间的沟通正文、谁对谁心动<br>
+   看不到：校友之间的对话、家长之间的沟通正文、谁对谁特别留意<br>
    导出：单次 50 条以内自动放行，超过 50 条需主任审批</div></div>`;
 }
 
@@ -1509,13 +1636,14 @@ function render(){
   const pages={login:pgLogin,role:pgRole,verify:pgVerify,chat:pgChatDetail,
     visitors:pgVisitors,photoAuth:pgPhotoAuth,parentVis:pgParentVis,
     invite:pgInvite,approval:pgApproval,tech:pgTech,settings:pgSettings,
-    wechat:pgWechat,pchat:pgParentChat,import:pgImport,intro:pgParentIntro};
+    wechat:pgWechat,pchat:pgParentChat,import:pgImport,intro:pgParentIntro,
+    bbsDetail:pgBBSDetail,bbsPost:pgBBSPost,pgroupMe:pgPGroupMe,pgchat:pgPGroupChat};
   if(pages[S.page]&&S.page!=="main"){P("tabbar").classList.add("hidden");pages[S.page]();return;}
   if(S.page==="main"&&typeof S.arg==="number"){P("tabbar").classList.add("hidden");pgProfile();return;}
   P("tabbar").classList.remove("hidden");renderTabs();
   const key=S.role+":"+S.tab;
-  ({ "alum:home":pgAlumHome,"alum:roster":()=>pgRoster("alum"),"alum:chat":pgChat,"alum:me":pgAlumMe,
-     "parent:home":pgParentHome,"parent:roster":()=>pgRoster("parent"),"parent:match":pgParentMatch,"parent:me":pgParentMe,
+  ({ "alum:home":pgAlumHome,"alum:roster":()=>pgRoster("alum"),"alum:bbs":pgBBS,"alum:chat":pgChat,"alum:me":pgAlumMe,
+     "parent:home":pgParentHome,"parent:roster":()=>pgRoster("parent"),"parent:pgroup":pgPGroup,"parent:match":pgParentMatch,"parent:me":pgParentMe,
      "staff:review":pgStaffReview,"staff:alumni":pgStaffAlumni,"staff:risk":pgStaffRisk,"staff:dash":pgStaffDash,"staff:me":pgStaffMe,
      "admin:home":pgAdminHome,"admin:perm":pgAdminPerm,"admin:data":pgAdminData,"admin:me":pgAdminLog
   }[key]||pgAlumHome)();
@@ -1531,12 +1659,458 @@ function goBack(){
   if(S.page==="wechat"){S.page="main";S.tab="chat";S.arg=null;render();return;}
   if(S.page==="pchat"){S.page="main";S.tab="match";S.arg=null;render();return;}
   if(S.page==="chat"){S.page="main";S.tab="chat";S.arg=null;render();return;}
+  if(S.page==="bbsDetail"||S.page==="bbsPost"){S.page="main";S.tab="bbs";render();return;}
+  if(S.page==="pgroupMe"||S.page==="pgchat"){S.page="main";S.tab="pgroup";render();return;}
   if(["visitors","photoAuth","parentVis","invite","approval","tech","settings","import","intro"].includes(S.page)){S.page="main";render();return;}
   if(S.page!=="main"){S.page="main";render();return;}
   if(S.arg!=null){S.arg=null;render();return;}
   S.from="app";S.role=null;S.page="role";render();
 }
 
+/* ==================================================================
+   校友互助（与小程序 pages/alum/bbs* 同构）
+   ——社区第二个目标：人与事之间的连接。知道该找谁，也知道该找谁问什么。
+   可见范围在查询层就分好了，「仅校友可见」的内推机会根本不会下发给家长端。
+   ================================================================== */
+function bbsList(){
+  let l=POSTS.filter(p=>!S.bbsKind||p.kind===S.bbsKind);
+  return l.sort((a,b)=> S.bbsSort==="hot" ? b.thanks-a.thanks : a.lastH-b.lastH);
+}
+function bbsPost(id){return POSTS.find(p=>p.id===id);}
+function bbsKindName(k){return (BBS_KIND_MAP[k]||{}).n||"互助";}
+function bbsKindIco(k){return (BBS_KIND_MAP[k]||{}).ico||"💬";}
+
+function pgBBS(){
+  P("nav-title").textContent="校友互助";
+  P("nav-act").textContent="我的";
+  P("nav-act").onclick=()=>{S.bbsMineOpen=true;render();};
+  const list=bbsList();
+  P("page").innerHTML=`
+  <div class="notice b">这里解决的是具体的事：选科、升学、求职、行业经验，也接受内推。
+    <div style="margin-top:4px">联系方式请在回复里说明情况，需要私下沟通时走平台的交换联系方式流程。</div></div>
+  <div class="filters">
+    <span class="chip ${!S.bbsKind?"on":""}" onclick="S.bbsKind='';render()">全部</span>
+    ${BBS_KINDS.map(k=>`<span class="chip ${S.bbsKind===k.k?"on":""}" onclick="S.bbsKind='${k.k}';render()">${k.ico} ${k.n}</span>`).join("")}
+  </div>
+  <div class="between" style="margin:2px 12px 6px">
+    <span class="muted small">${list.length} 条</span>
+    <span class="chip ${S.bbsSort==="new"?"on":""}" onclick="S.bbsSort=S.bbsSort==='new'?'hot':'new';render()">${S.bbsSort==="new"?"最新":"最热"} ›</span>
+  </div>
+  ${list.length?"":`<div class="empty"><div class="ico">🌱</div><div class="t">这个分类还没有内容</div>
+    <div class="d">换一类看看，或者把你正在纠结的事写出来</div></div>`}
+  ${list.map(p=>`
+   <div class="card tight" onclick="S.bbsId='${p.id}';S.page='bbsDetail';render()">
+     <div class="row" style="align-items:flex-start;gap:9px">
+       <div class="bb-k ${p.kind==='opportunity'?'bb-k-op':''}">${bbsKindIco(p.kind)}</div>
+       <div style="flex:1;min-width:0">
+         <div class="row" style="gap:5px;flex-wrap:wrap">
+           <span class="tag" style="background:rgba(7,193,96,.1);color:var(--theme)">${bbsKindName(p.kind)}</span>
+           ${p.state==="closed"?`<span class="tag" style="background:#eaf5ee;color:#0a6b34">${p.solved?"已解决":"已结束"}</span>`:""}
+           ${p.audience==="alum"?'<span class="tag">仅校友可见</span>':""}
+         </div>
+         <div class="b" style="margin-top:5px">${esc(p.title)}</div>
+         <div class="small muted bb-2">${esc(p.body.slice(0,52))}…</div>
+       </div>
+     </div>
+     ${p.tags.length?`<div style="margin-top:7px">${p.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>`:""}
+     <div class="between" style="margin-top:8px">
+       <span class="muted small ellipsis" style="flex:1">${p.grad?p.grad+"届 · ":""}${esc(p.author)} · ${ago(p.lastH)}</span>
+       <span class="row" style="gap:10px">
+         <span class="muted small">💬 ${p.replyCount}</span>
+         <span class="bb-t ${p.thanked||S.bbsThank[p.id]?'on':''}" onclick="bbsThanks(event,'${p.id}')">有用 ${p.thanks+(S.bbsThank[p.id]?1:0)}</span>
+       </span>
+     </div>
+   </div>`).join("")}
+  <div class="footer-note">发布与回复都需实名认证 · 每天 3 发 / 10 回复上限</div>
+  <div class="fab" onclick="S.page='bbsPost';render()">＋ 写一条</div>
+  ${S.bbsMineOpen?`
+   <div class="mask" onclick="S.bbsMineOpen=false;render()">
+     <div class="sheet" onclick="event.stopPropagation()">
+       <div class="between" style="margin-bottom:10px"><b>我的互助</b>
+         <span onclick="S.bbsMineOpen=false;render()" style="color:#999;font-size:22px;cursor:pointer">×</span></div>
+       <div class="row" style="gap:8px;margin-bottom:10px">
+         <span class="chip ${S.bbsMineTab==="post"?"on":""}" onclick="S.bbsMineTab='post';render()">我发布的</span>
+         <span class="chip ${S.bbsMineTab==="reply"?"on":""}" onclick="S.bbsMineTab='reply';render()">我的回复</span>
+       </div>
+       <div class="empty" style="padding:26px 0"><div class="t">还没有内容</div>
+         <div class="d">${S.bbsMineTab==="post"?"写一条试试":"回复过的会记在这里"}</div></div>
+     </div>
+   </div>`:""}`;
+}
+function bbsThanks(e,id){
+  e.stopPropagation();
+  const p=bbsPost(id); if(!p) return;
+  S.bbsThank[id]=!S.bbsThank[id];
+  p.thanks += S.bbsThank[id]?1:-1;
+  toast(S.bbsThank[id]?"已标记为有用":"已取消");
+  render();
+}
+function pgBBSDetail(){
+  const p=bbsPost(S.bbsId);
+  if(!p){S.page="main";S.tab="bbs";render();return;}
+  P("nav-title").textContent=bbsKindName(p.kind);
+  P("page").innerHTML=`
+  <div class="card">
+    <div class="row" style="gap:5px;flex-wrap:wrap">
+      <span class="tag" style="background:rgba(7,193,96,.1);color:var(--theme)">${bbsKindName(p.kind)}</span>
+      ${p.state==="closed"?`<span class="tag" style="background:#eaf5ee;color:#0a6b34">${p.solved?"已解决":"已结束"}</span>`:""}
+      ${p.audience==="alum"?'<span class="tag">仅校友可见</span>':""}
+    </div>
+    <div style="font-size:19px;font-weight:600;line-height:1.45;margin-top:9px">${esc(p.title)}</div>
+    <div class="pre" style="margin-top:9px;line-height:1.75">${esc(p.body)}</div>
+    ${p.tags.length?`<div style="margin-top:10px">${p.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join("")}</div>`:""}
+    <div class="between" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)">
+      <div class="row" style="gap:9px">
+        <div class="avatar av-40" style="background:${AV[(p.grad||0)%AV.length]}">${esc((p.author||"?").slice(0,1))}</div>
+        <div>
+          <div class="small b">${esc(p.author)}</div>
+          <div class="muted" style="font-size:11px">${p.grad?p.grad+"届 · ":""}${p.ind?esc(p.ind)+" · ":""}${ago(p.h)}</div>
+        </div>
+      </div>
+      <div class="bb-tbox ${p.thanked||S.bbsThank[p.id]?'on':''}" onclick="bbsThanks(event,'${p.id}')">
+        <div class="bb-tn">${p.thanks+(S.bbsThank[p.id]?1:0)}</div>
+        <div class="bb-tl">${p.thanked||S.bbsThank[p.id]?"已标记":"有用"}</div>
+      </div>
+    </div>
+    <div class="muted" style="font-size:11px;margin-top:7px">被看过 ${p.viewCount} 次 · ${p.replyCount} 条回复</div>
+  </div>
+  ${p.mine&&p.state!=="closed"?`
+   <div class="card tight"><div class="b small" style="margin-bottom:8px">这条是我发布的</div>
+     <div class="row" style="gap:8px">
+       <span class="btn mini ghost" style="flex:1" onclick="toast('已标记为已解决')">标记已解决</span>
+       <span class="btn mini gray" style="flex:1" onclick="toast('已结束这条')">结束这条</span></div>
+     <div class="muted" style="font-size:11px;margin-top:7px">已有人回复的内容不能删除，只能标记结束——别人的回答不该凭空消失。</div></div>`:""}
+  <div class="notice b">这里是公开的互助区，回答会被后来的人看到。
+    <div style="margin-top:4px">请不要在内容里留联系方式，需要私下沟通时走平台的交换联系方式流程。</div></div>
+  <div class="sec-title"><b>回复 ${p.replies.length}</b><span class="muted">按时间排序</span></div>
+  <div class="card">
+    ${p.replies.length?"":`<div class="empty" style="padding:26px 0"><div class="t">还没有回复</div>
+      <div class="d">如果你遇到过类似的事，说一句也许就帮到了</div></div>`}
+    ${p.replies.map((r,i)=>`
+     <div class="row" style="align-items:flex-start;gap:9px;${i?"margin-top:13px;padding-top:13px;border-top:1px solid var(--line)":""}">
+       <div class="avatar av-28" style="background:${AV[(r.grad||0)%AV.length]}">${esc((r.author||"?").slice(0,1))}</div>
+       <div style="flex:1;min-width:0">
+         <div class="row" style="gap:6px;flex-wrap:wrap">
+           <span class="small b">${esc(r.author)}</span>
+           ${r.grad?`<span class="muted" style="font-size:11px">${r.grad}届</span>`:""}
+           <span class="muted" style="font-size:11px">${esc(r.at)}</span>
+         </div>
+         <div class="small" style="margin-top:3px;line-height:1.6">${esc(r.body)}</div>
+       </div>
+     </div>`).join("")}
+  </div>
+  <div class="bb-bar">
+    <input class="input" style="flex:1" placeholder="说说你的经验" id="bbRep"
+      oninput="window._bbRep=this.value;document.getElementById('bbSend').className='btn sm'+(this.value?'':' gray')">
+    <span class="btn sm gray" id="bbSend" onclick="bbsSend('${p.id}')">发送</span>
+  </div>`;
+}
+function bbsSend(id){
+  const v=(window._bbRep||"").trim();
+  if(!v){toast("先写一句再说");return;}
+  const p=bbsPost(id); if(!p) return;
+  p.replies.push({author:"你",grad:ME.grad,body:v,at:"刚刚"});
+  p.replyCount+=1; window._bbRep="";
+  toast("已发布 · 会被后来的人看到");
+  render();
+}
+function pgBBSPost(){
+  P("nav-title").textContent="写一条";
+  const n=S.bbsNew;
+  P("page").innerHTML=`
+  <div class="notice b">解决的是具体的事：问清楚、讲明白、能帮上忙。
+    <div style="margin-top:4px">请不要在内容里留联系方式。</div></div>
+  <div class="card">
+    <div class="b small" style="margin-bottom:8px">类型</div>
+    <div class="row" style="gap:8px;flex-wrap:wrap">
+      ${BBS_KINDS.map(k=>`<span class="chip ${n.kind===k.k?"on":""}" onclick="S.bbsNew.kind='${k.k}';S.bbsNew.audience='${k.defAudience}';render()">${k.ico} ${k.n}</span>`).join("")}
+    </div>
+    <div class="muted" style="font-size:11px;margin-top:7px">${esc((BBS_KIND_MAP[n.kind]||{}).d||"")}</div>
+  </div>
+  <div class="card">
+    <div class="between"><span class="b small">标题</span><span class="muted" style="font-size:11px" id="bbTN">${n.title.length} / ${BBS_LIMITS.titleMax}</span></div>
+    <input class="input" style="margin-top:7px" maxlength="${BBS_LIMITS.titleMax}" placeholder="一句话说清你要问什么"
+      value="${esc(n.title)}" oninput="S.bbsNew.title=this.value;document.getElementById('bbTN').textContent=this.value.length+' / '+${BBS_LIMITS.titleMax}">
+    <div class="between" style="margin-top:13px"><span class="b small">正文</span><span class="muted" style="font-size:11px" id="bbBN">${n.body.length} / ${BBS_LIMITS.bodyMax}</span></div>
+    <textarea class="bb-ta" maxlength="${BBS_LIMITS.bodyMax}" placeholder="把背景、已经试过什么、卡在哪说清楚，别人更好回答"
+      oninput="S.bbsNew.body=this.value;document.getElementById('bbBN').textContent=this.value.length+' / '+${BBS_LIMITS.bodyMax}">${esc(n.body)}</textarea>
+  </div>
+  <div class="card">
+    <div class="between"><span class="b small">标签</span><span class="muted" style="font-size:11px">${n.tags.length} / ${BBS_LIMITS.tagsMax}</span></div>
+    <div style="margin-top:8px">${BBS_TAGS.map(t=>`<span class="chip ${n.tags.indexOf(t)>=0?"on":""}" onclick="bbsTag('${t}')">${t}</span>`).join("")}</div>
+  </div>
+  <div class="card">
+    <div class="b small" style="margin-bottom:8px">可见范围</div>
+    <div class="row" style="gap:8px">
+      <span class="chip ${n.audience==="all"?"on":""}" onclick="S.bbsNew.audience='all';render()">全社区可见</span>
+      <span class="chip ${n.audience==="alum"?"on":""}" onclick="S.bbsNew.audience='alum';render()">仅校友可见</span>
+    </div>
+    <div class="muted" style="font-size:11px;margin-top:7px">${n.audience==="alum"?"家长端不会显示这条内容，云端查询时就过滤掉了，不依赖前端。":"校友与家长都能看到。"}</div>
+  </div>
+  <div style="margin:14px 12px"><span class="btn ${n.title.trim()?"":"gray"}" onclick="bbsPublish()">发布</span></div>
+  <div class="footer-note">发布需实名认证 · 每天 3 条 / 每周 10 条</div>`;
+}
+function bbsTag(t){
+  const a=S.bbsNew.tags,i=a.indexOf(t);
+  if(i>=0)a.splice(i,1);
+  else if(a.length>=BBS_LIMITS.tagsMax) return toast("最多 "+BBS_LIMITS.tagsMax+" 个标签");
+  else a.push(t);
+  render();
+}
+function bbsPublish(){
+  const n=S.bbsNew;
+  if(!n.title.trim()) return toast("先写个标题");
+  POSTS.unshift({id:"ps"+Date.now(),kind:n.kind,audience:n.audience,author:"你",grad:ME.grad,ind:ME.ind,
+    title:n.title.trim(),body:n.body.trim()||"（未填写正文）",tags:n.tags.slice(),thanks:0,replyCount:0,viewCount:0,
+    state:"open",solved:false,h:0,lastH:0,mine:true,thanked:false,replies:[]});
+  S.bbsNew={kind:"ask",title:"",body:"",tags:[],audience:"all"};
+  S.tab="bbs";S.page="main";
+  toast("已发布 · 实名认证后其他校友才能回复");
+  render();
+}
+
+/* ==================================================================
+   家长圈 + 我的背景介绍（与小程序 pages/parent/pgroup* 同构）
+   ——家长是这里最被低估的资源：同为家长，手里有行业、经验和信息差。
+   家长之间直接沟通，不需要先等孩子互相特别留意。
+   ================================================================== */
+function pgList(){
+  const kw=S.pgKw.trim();
+  if(!kw) return PGROUP;
+  return PGROUP.filter(p=>(p.city+p.ind+(AGE_TEXT[p.age]||"")+p.grad+p.school+p.intro+p.resource.join("")+p.wants.join("")).indexOf(kw)>=0);
+}
+function pgCard(p){
+  return `<div class="card">
+    <div class="row" style="gap:10px">
+      <div class="avatar av-56" style="background:${AV[(p.grad||0)%AV.length]}">${esc(p.name.slice(0,1))}</div>
+      <div style="flex:1;min-width:0">
+        <div class="b">${esc(p.name)}</div>
+        <div class="small muted">孩子 ${p.grad} 届${p.school?" · "+esc(p.school):""}</div>
+      </div>
+    </div>
+    <div class="pg-bg">
+      ${p.city?`<div class="pg-bg-r"><span class="pg-bg-k">所在地</span><span class="pg-bg-v">${esc(p.city)}</span></div>`:""}
+      ${p.ind?`<div class="pg-bg-r"><span class="pg-bg-k">行业</span><span class="pg-bg-v">${esc(p.ind)}</span></div>`:""}
+      ${p.age&&p.age!=="na"?`<div class="pg-bg-r"><span class="pg-bg-k">年龄段</span><span class="pg-bg-v">${AGE_TEXT[p.age]}</span></div>`:""}
+    </div>
+    ${p.intro?`<div class="small" style="margin-top:9px">「${esc(p.intro)}」</div>`:""}
+    ${p.resource.length?`<div style="margin-top:9px"><div class="muted" style="font-size:11px">能提供</div>
+      <div style="margin-top:4px">${p.resource.map(r=>`<span class="tag" style="background:#eaf5ee;color:#0a6b34">${esc(r)}</span>`).join("")}</div></div>`:""}
+    ${p.wants.length?`<div style="margin-top:9px"><div class="muted" style="font-size:11px">想对接</div>
+      <div style="margin-top:4px">${p.wants.map(w=>`<span class="tag">${esc(w)}</span>`).join("")}</div></div>`:""}
+    ${p.motto?`<div class="pg-motto">「${esc(p.motto)}」</div>`:""}
+    <div class="btn mini ghost" style="margin-top:11px" onclick="S.pgSheet='${p.id}';render()">发起沟通</div>
+  </div>`;
+}
+function pgPGroup(){
+  P("nav-title").textContent="家长圈";
+  P("nav-act").textContent="我的背景";
+  P("nav-act").onclick=()=>{S.page="pgroupMe";render();};
+  const list=pgList();
+  P("page").innerHTML=`
+  <div class="row" style="gap:8px;margin:10px 12px 0">
+    <span class="chip ${S.pgTab==="find"?"on":""}" style="flex:1;justify-content:center" onclick="S.pgTab='find';render()">找家长</span>
+    <span class="chip ${S.pgTab==="chats"?"on":""}" style="flex:1;justify-content:center" onclick="S.pgTab='chats';render()">我的沟通</span>
+  </div>
+  ${S.pgTab==="find"?`
+   <div class="notice p"><b>家长是这里最被低估的资源</b>
+     <div style="margin-top:5px">同为家长，你们手里有行业、经验和信息差。找到聊得来的人，直接沟通就行——不需要先等孩子互相特别留意。</div></div>
+   <div class="row" style="gap:8px;margin:0 12px">
+     <input class="input" style="flex:1" placeholder="搜城市、行业、年龄段或届别，如「金融」" value="${esc(S.pgKw)}"
+       oninput="S.pgKw=this.value;clearTimeout(window.pt);window.pt=setTimeout(()=>{render();const e=document.querySelector('input.input');if(e)e.focus()},380)">
+     <span class="btn mini" style="height:40px;line-height:40px" onclick="render()">搜索</span>
+   </div>
+   ${list.length?list.map(pgCard).join(""):`<div class="empty"><div class="ico">🔍</div><div class="t">没找到匹配的家长</div>
+     <div class="d">换个词试试，或者清空搜索看全部</div></div>`}
+  `:`
+   ${PTHREADS.length?PTHREADS.map(t=>`
+     <div class="card row" style="gap:10px" onclick="S.pgChatId='${t.id}';S.page='pgchat';render()">
+       <div class="avatar av-56" style="background:${AV[3]}">${esc(t.peer.slice(0,1))}</div>
+       <div style="flex:1;min-width:0">
+         <div class="b">${esc(t.peer)}</div>
+         <div class="small muted ellipsis">${esc(t.city)} · ${esc(t.ind)} · ${esc(AGE_TEXT[t.age])}</div>
+         <div class="small muted ellipsis">${esc(t.last)}</div>
+       </div>
+       <span class="muted" style="font-size:11px">${esc(t.at)}</span>
+     </div>`).join(""):`<div class="empty"><div class="ico">💬</div><div class="t">还没有沟通记录</div>
+     <div class="d">去「找家长」看看，资源能对上就聊两句</div></div>`}
+  `}
+  ${S.pgSheet?pgSheet():""}`;
+}
+function pgSheet(){
+  const p=PGROUP.find(x=>x.id===S.pgSheet); if(!p) return "";
+  return `<div class="mask" onclick="S.pgSheet=null;render()">
+    <div class="sheet" onclick="event.stopPropagation()">
+      <div class="between" style="margin-bottom:10px"><b>给 ${esc(p.name)} 发第一句</b>
+        <span onclick="S.pgSheet=null;render()" style="color:#999;font-size:22px;cursor:pointer">×</span></div>
+      <div class="notice">说清楚你是谁、想聊什么。对方会看到你的城市、届别和你写的这句话。
+        <b>你孩子的档案不会展示给对方</b>，对方孩子也一样。</div>
+      <textarea class="bb-ta" style="height:96px;margin-top:10px" maxlength="500" id="pgTxt"
+        placeholder="例如：您好，我家孩子 2016 届在上海，想请教一下选科的经验。" oninput="window._pgTxt=this.value"></textarea>
+      <div class="muted" style="font-size:11px;margin-top:6px">这段对话你的孩子看不到原文。</div>
+      <span class="btn" style="margin-top:12px" onclick="pgStart('${p.id}')">发送</span>
+    </div></div>`;
+}
+function pgStart(id){
+  const v=(window._pgTxt||"").trim();
+  if(!v) return toast("先写一句，对方才知道你是谁");
+  const p=PGROUP.find(x=>x.id===id); if(!p) return;
+  const t=PTHREADS.find(x=>x.peer===p.name);
+  if(t){t.msgs.push({t:"out",x:v});t.last=v;t.at="刚刚";S.pgChatId=t.id;}
+  else{
+    const nt={id:"pt"+Date.now(),peer:p.name,city:p.city,ind:p.ind,age:p.age,last:v,at:"刚刚",
+      msgs:[{t:"out",x:v}]};
+    PTHREADS.unshift(nt);S.pgChatId=nt.id;
+  }
+  window._pgTxt="";S.pgSheet=null;S.pgTab="chats";S.page="pgchat";
+  toast("已发送 · 对方回复后会通知你");
+  render();
+}
+function pgPGroupChat(){
+  const t=PTHREADS.find(x=>x.id===S.pgChatId);
+  if(!t){S.page="main";S.tab="pgroup";render();return;}
+  P("nav-title").textContent=t.peer;
+  P("page").innerHTML=`
+  <div class="notice p" style="margin-bottom:6px">这段对话<b>你的孩子看不到原文</b>，对方的孩子也一样。</div>
+  ${t.msgs.map(m=>`<div class="msg ${m.t==="out"?"out":"in"}">${esc(m.x)}</div>`).join("")}
+  <div class="bb-bar">
+    <input class="input" style="flex:1" placeholder="继续说…" oninput="window._pgRep=this.value">
+    <span class="btn sm" onclick="pgReply('${t.id}')">发送</span>
+  </div>`;
+}
+function pgReply(id){
+  const v=(window._pgRep||"").trim();
+  if(!v) return toast("先写一句");
+  const t=PTHREADS.find(x=>x.id===id); if(!t) return;
+  t.msgs.push({t:"out",x:v});t.last=v;t.at="刚刚";window._pgRep="";
+  render();
+}
+function pgPGroupMe(){
+  const m=S.pgMine;
+  P("nav-title").textContent="我的背景介绍";
+  P("page").innerHTML=`
+  <div class="notice">填了背景介绍，其他家长在家长圈里才能判断你是不是同类家长。
+    <div style="margin-top:4px">这些内容<b>你的孩子看不到</b>，也不向校友展示你的姓名。</div></div>
+  <div class="card">
+    <div class="b small" style="margin-bottom:10px">背景介绍</div>
+    <div class="between"><span class="small b">① 所在城市</span><span class="muted" style="font-size:11px" onclick="S.pgMine.city='';render()">清空</span></div>
+    <input class="input" style="margin-top:6px" maxlength="20" placeholder="例如：上海" value="${esc(m.city)}" oninput="S.pgMine.city=this.value">
+    <div class="between" style="margin-top:14px"><span class="small b">② 所从事行业</span><span class="muted" style="font-size:11px" onclick="S.pgMine.ind='';render()">清空</span></div>
+    <input class="input" style="margin-top:6px" maxlength="20" placeholder="例如：金融" value="${esc(m.ind)}" oninput="S.pgMine.ind=this.value">
+    <div class="between" style="margin-top:14px"><span class="small b">③ 年龄段</span><span class="muted" style="font-size:11px" onclick="S.pgMine.age='na';render()">清空</span></div>
+    <div class="pg-rgs">
+      ${AGE_RANGE.map(r=>`<div class="pg-rg ${m.age===r.k?"on":""}" onclick="S.pgMine.age='${r.k}';render()">
+        <div class="small b">${r.n}</div><div class="pg-rg-d">${r.d}</div></div>`).join("")}
+    </div>
+    <div class="muted" style="font-size:11px;margin-top:7px">只选区间，不填精确年龄。再次点已选的可以取消，会回到「不便透露」。</div>
+  </div>
+  <div class="card">
+    <div class="b small" style="margin-bottom:10px">让别人一眼看懂你</div>
+    <div class="between"><span class="small b">一句话介绍</span><span class="muted" style="font-size:11px">${m.intro.length} / 60</span></div>
+    <textarea class="bb-ta" style="height:70px;margin-top:6px" maxlength="60" placeholder="你在做什么、经历过什么、愿意聊什么"
+      oninput="S.pgMine.intro=this.value">${esc(m.intro)}</textarea>
+    <div class="between" style="margin-top:14px"><span class="small b">一句格言</span><span class="muted" style="font-size:11px">${m.motto.length} / 30</span></div>
+    <input class="input" style="margin-top:6px" maxlength="30" placeholder="想对孩子说的那一句" value="${esc(m.motto)}" oninput="S.pgMine.motto=this.value">
+  </div>
+  <div class="card">
+    <div class="between"><span class="b small">我能提供的</span><span class="muted" style="font-size:11px">${m.resource.length} / 8</span></div>
+    <div class="pg-sub">
+      ${m.resource.length?`<div>${m.resource.map(r=>`<span class="chip on" onclick="pgDel('resource','${esc(r)}')">${esc(r)} ×</span>`).join("")}</div>`:`<div class="muted small">还没填。下面点几个，或者自己写。</div>`}
+      <div class="row" style="gap:8px;margin-top:8px">
+        <input class="input" style="flex:1" placeholder="自己写一条" id="pgRes" oninput="window._pgRes=this.value">
+        <span class="btn mini" onclick="pgAdd('resource')">加上</span>
+      </div>
+      <div style="margin-top:8px">${RESOURCE_PRESET.map(r=>`<span class="chip" onclick="pgAdd('resource','${r}')">${r}</span>`).join("")}</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="between"><span class="b small">我想对接的</span><span class="muted" style="font-size:11px">${m.wants.length} / 8</span></div>
+    <div class="pg-sub">
+      ${m.wants.length?`<div>${m.wants.map(w=>`<span class="chip on" onclick="pgDel('wants','${esc(w)}')">${esc(w)} ×</span>`).join("")}</div>`:`<div class="muted small">还没填。填了之后家长圈会优先把资源对得上的家长排前面。</div>`}
+      <div class="row" style="gap:8px;margin-top:8px">
+        <input class="input" style="flex:1" placeholder="自己写一条" id="pgWant" oninput="window._pgWant=this.value">
+        <span class="btn mini" onclick="pgAdd('wants')">加上</span>
+      </div>
+      <div style="margin-top:8px">${RESOURCE_PRESET.map(r=>`<span class="chip" onclick="pgAdd('wants','${r}')">${r}</span>`).join("")}</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="b small" style="margin-bottom:10px">填了之后谁能看到</div>
+    <div class="pg-bd">
+      <div class="pg-bd-r"><span style="color:var(--ok)">✔</span><span style="flex:1">其他家长在家长圈里看到的是<b>脱敏姓氏</b>与你填的三项</span></div>
+      <div class="pg-bd-r"><span style="color:var(--danger)">✘</span><span style="flex:1">你的<b>孩子看不到</b>这些内容</span></div>
+      <div class="pg-bd-r"><span style="color:var(--danger)">✘</span><span style="flex:1">校友看不到你的姓名，也看不到这三项</span></div>
+      <div class="pg-bd-r"><span style="color:var(--danger)">✘</span><span style="flex:1">你的姓名不能在这里改 —— 它是绑定关系的凭证</span></div>
+    </div>
+  </div>
+  <div style="margin:14px 12px"><span class="btn" onclick="pgSave()">保存</span></div>
+  <div class="row" style="margin:0 12px"><span class="btn mini ghost" style="flex:1" onclick="S.page='main';S.tab='pgroup';render()">去家长圈看看 ›</span></div>
+  <div class="footer-note">三项都可以不填 · 不填只是卡片上不显示，不会被拦</div>`;
+}
+function pgAdd(which,preset){
+  const v=preset||(which==="resource"?window._pgRes:window._pgWant)||"";
+  const s=v.trim(); if(!s) return toast("先写一条");
+  const a=S.pgMine[which];
+  if(a.indexOf(s)>=0) return toast("已经有了");
+  if(a.length>=8) return toast("最多 8 条");
+  a.push(s);
+  if(!preset){window._pgRes="";window._pgWant="";}
+  render();
+}
+function pgDel(which,v){
+  const a=S.pgMine[which],i=a.indexOf(v);
+  if(i>=0)a.splice(i,1);
+  render();
+}
+function pgSave(){
+  S.page="main";S.tab="pgroup";
+  toast("已保存 · 家长圈里其他家长现在能看到你的三项了");
+  render();
+}
+
+/* 新组件样式（一次性注入，与既有样式不冲突） */
+document.head.insertAdjacentHTML("beforeend",`<style>
+.empty{padding:44px 20px;text-align:center;color:var(--ink3)}
+.empty .ico{font-size:34px;opacity:.5}
+.empty .t{font-size:14px;color:var(--ink2);margin-top:8px}
+.empty .d{font-size:12px;margin-top:4px}
+.fab{position:absolute;right:16px;bottom:132px;height:44px;padding:0 18px;border-radius:22px;
+  background:var(--theme);color:#fff;font-size:15px;font-weight:600;display:flex;align-items:center;
+  box-shadow:0 6px 18px rgba(0,0,0,.22);cursor:pointer;z-index:5}
+.mask{position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:30;display:flex;align-items:flex-end}
+.mask .sheet{background:#fff;border-radius:14px 14px 0 0;padding:16px 14px 22px;width:100%;max-height:76%;overflow-y:auto}
+.pre{white-space:pre-wrap;word-break:break-word;font-size:15px}
+.bb-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.bb-k{width:32px;height:32px;flex:0 0 32px;border-radius:8px;background:rgba(7,193,96,.12);
+  display:flex;align-items:center;justify-content:center;font-size:16px}
+.bb-k-op{background:rgba(58,111,247,.12)}
+.bb-t{font-size:12px;color:var(--ink3);padding:2px 8px;border-radius:11px;background:#f2f3f5;cursor:pointer}
+.bb-t.on{color:var(--theme);background:rgba(7,193,96,.12)}
+.bb-tbox{width:56px;flex:0 0 56px;text-align:center;border:1px solid var(--line);border-radius:8px;padding:5px 0;cursor:pointer}
+.bb-tbox.on{border-color:var(--theme);background:rgba(7,193,96,.08)}
+.bb-tn{font-size:16px;font-weight:600;line-height:1.1}
+.bb-tbox.on .bb-tn{color:var(--theme)}
+.bb-tl{font-size:11px;color:var(--ink3)}
+.bb-tbox.on .bb-tl{color:var(--theme)}
+.bb-bar{position:sticky;bottom:0;display:flex;gap:8px;align-items:center;padding:8px 12px;
+  background:#fff;border-top:1px solid var(--line);margin-top:10px}
+.bb-ta{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:15px;
+  background:#fff;min-height:120px;resize:none;font-family:inherit;line-height:1.6}
+.pg-bg{margin-top:10px;padding:9px 11px;background:#f7f8fa;border-radius:8px}
+.pg-bg-r{display:flex;justify-content:space-between;font-size:13px;padding:2px 0}
+.pg-bg-k{color:var(--ink3)}
+.pg-bg-v{font-weight:600}
+.pg-motto{margin-top:10px;padding:8px 11px;border-left:3px solid var(--parent);
+  background:#fff6ee;font-size:13px;color:#8a5a00;border-radius:0 8px 8px 0}
+.pg-rgs{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:7px}
+.pg-rg{border:1px solid var(--line);border-radius:8px;padding:8px 10px;cursor:pointer;background:#fff}
+.pg-rg.on{border-color:var(--theme);background:rgba(7,193,96,.08)}
+.pg-rg-d{font-size:11px;color:var(--ink3);margin-top:2px}
+.pg-sub{margin-top:9px;padding:10px 11px;background:#f7f8fa;border-radius:8px}
+.pg-bd{margin-top:2px}
+.pg-bd-r{display:flex;gap:8px;font-size:13px;padding:5px 0;line-height:1.5}
+.pg-bd-r>span:first-child{flex:0 0 16px}
+</style>`);
 </script>
 </body>
 </html>
